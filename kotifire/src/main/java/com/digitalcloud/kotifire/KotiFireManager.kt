@@ -7,21 +7,19 @@ package com.digitalcloud.kotifire
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.support.v4.util.ArrayMap
-import android.util.Log
+import androidx.collection.ArrayMap
 import com.digitalcloud.kotifire.models.RequestModel
 import com.digitalcloud.kotifire.models.ResponseModel
 import com.digitalcloud.kotifire.provides.cache.CacheProvider
 import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
 import com.digitalcloud.kotifire.provides.network.BaseNetworkProvider
-import com.digitalcloud.kotifire.provides.network.NetworkHandler
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
 import com.digitalcloud.kotifire.provides.network.asyncHttp.AsyncHttpProvider
 import com.digitalcloud.kotifire.provides.network.volley.DataPart
 import com.digitalcloud.kotifire.provides.network.volley.VolleyNetworkProvider
 import com.google.gson.Gson
 import org.json.JSONArray
-import java.util.ArrayList
+import java.util.*
 import kotlin.reflect.KClass
 
 /**
@@ -29,7 +27,6 @@ import kotlin.reflect.KClass
  * for more details : a.hussein@dce.sa
  */
 
-private const val TAG = "KotiFireManager"
 private val gson = Gson()
 
 class KotiFireManager<T : Any>(private val context: Context, val type: KClass<T>) {
@@ -52,23 +49,27 @@ class KotiFireManager<T : Any>(private val context: Context, val type: KClass<T>
     }
 
     fun postNetworkWithImageOnly(
-            url: String,
-            requestModel: RequestModel,
-            imagePath: String,
-            dataHandler: DataHandler<T>
+        url: String,
+        requestModel: RequestModel,
+        imagePath: String,
+        dataHandler: DataHandler<T>
     ) {
         networkProvider.postWithImage(url, requestModel, imagePath, dataHandler)
     }
 
-    fun postNetworkWithImages(url: String, params: ArrayMap<String, DataPart>, dataHandler: DataHandler<T>) {
+    fun postNetworkWithImages(
+        url: String,
+        params: ArrayMap<String, DataPart>,
+        dataHandler: DataHandler<T>
+    ) {
         networkProvider.postWithImages(url, params, dataHandler)
     }
 
     fun postNetworkWithImages(
-            url: String,
-            requestModel: RequestModel,
-            params: ArrayMap<String, DataPart>,
-            dataHandler: DataHandler<T>
+        url: String,
+        requestModel: RequestModel,
+        params: ArrayMap<String, DataPart>,
+        dataHandler: DataHandler<T>
     ) {
         networkProvider.postWithImages(url, requestModel, params, dataHandler)
     }
@@ -243,8 +244,8 @@ class KotiFireManager<T : Any>(private val context: Context, val type: KClass<T>
     private fun handleSuccessResponse(response: String, dataHandler: DataHandler<T>) {
         when (type) {
             ResponseModel::class -> dataHandler.onSuccess(
-                    gson.fromJson<T>(response, type.java),
-                    SourceType.NETWORK
+                gson.fromJson<T>(response, type.java),
+                SourceType.NETWORK
             )
             else -> {
                 val responseModel = gson.fromJson(response, ResponseModel::class.java)

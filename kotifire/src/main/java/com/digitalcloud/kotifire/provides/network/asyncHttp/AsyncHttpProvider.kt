@@ -6,7 +6,9 @@
 package com.digitalcloud.kotifire.provides.network.asyncHttp
 
 import android.util.Log
+import androidx.collection.ArrayMap
 import com.digitalcloud.kotifire.KotiFire
+import com.digitalcloud.kotifire.models.RequestModel
 import com.digitalcloud.kotifire.provides.network.BaseNetworkProvider
 import com.digitalcloud.kotifire.provides.network.NetworkHandler
 import com.loopj.android.http.AsyncHttpClient
@@ -25,7 +27,11 @@ internal class AsyncHttpProvider : BaseNetworkProvider {
     override fun get(url: String, networkHandler: NetworkHandler) {
         Log.e(TAG, "get url : $url")
         AsyncHttpClient().get(url, object : AsyncHttpResponseHandler() {
-            override fun onSuccess(statusCode: Int, headers: Array<out Header>?, responseBody: ByteArray?) {
+            override fun onSuccess(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?
+            ) {
                 if (responseBody != null)
                     networkHandler.onSuccess(responseBody.toString(Charset.forName("UTF-8")))
             }
@@ -37,8 +43,51 @@ internal class AsyncHttpProvider : BaseNetworkProvider {
                 error: Throwable?
             ) {
                 if (responseBody != null)
-                    networkHandler.onFailure(statusCode, responseBody.toString(Charset.forName("UTF-8")))
+                    networkHandler.onFailure(
+                        statusCode,
+                        responseBody.toString(Charset.forName("UTF-8"))
+                    )
             }
         })
     }
+
+    override fun post(url: String, networkHandler: NetworkHandler) {
+    }
+
+    override fun post(url: String, requestModel: RequestModel, networkHandler: NetworkHandler) {
+    }
+
+    override fun postFiles(
+        url: String,
+        params: ArrayMap<String, String>,
+        networkHandler: NetworkHandler
+    ) {
+    }
+
+    override fun postFiles(
+        url: String,
+        requestModel: RequestModel,
+        params: ArrayMap<String, String>,
+        networkHandler: NetworkHandler
+    ) {
+    }
+
+    override fun put(url: String, networkHandler: NetworkHandler) {
+    }
+
+    override fun put(url: String, requestModel: RequestModel, networkHandler: NetworkHandler) {
+    }
+
+    override fun patch(url: String, networkHandler: NetworkHandler) {
+    }
+
+    override fun patch(url: String, requestModel: RequestModel, networkHandler: NetworkHandler) {
+    }
+
+    override fun delete(url: String, networkHandler: NetworkHandler) {
+    }
+
+    override fun delete(url: String, requestModel: RequestModel, networkHandler: NetworkHandler) {
+    }
+
 }

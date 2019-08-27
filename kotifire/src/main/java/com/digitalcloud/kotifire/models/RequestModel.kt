@@ -5,7 +5,7 @@
 
 package com.digitalcloud.kotifire.models
 
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import android.util.Log
 import java.util.*
 
@@ -48,7 +48,7 @@ class RequestModel {
 
         }
 
-        Log.e(TAG, "generatePostParams: " + params.toString())
+        Log.e(TAG, "generatePostParams: $params")
 
         return params
     }
@@ -78,7 +78,7 @@ class RequestModel {
                 temp.deleteCharAt(temp.length - 1)
         }
 
-        Log.e(TAG, "generateGetParams: " + temp.toString())
+        Log.e(TAG, "generateGetParams: $temp")
 
         return temp.toString()
     }

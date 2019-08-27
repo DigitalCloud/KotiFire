@@ -5,7 +5,7 @@
 
 package com.digitalcloud.kotifireexample
 
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import android.util.Log
 
 /**

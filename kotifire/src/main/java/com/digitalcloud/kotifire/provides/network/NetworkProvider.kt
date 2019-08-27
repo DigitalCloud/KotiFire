@@ -6,7 +6,7 @@
 package com.digitalcloud.kotifire.provides.network
 
 import android.content.Context
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import com.digitalcloud.kotifire.DataHandlerInterface
 import com.digitalcloud.kotifire.provides.network.volley.DataPart
 import com.digitalcloud.kotifire.models.RequestModel

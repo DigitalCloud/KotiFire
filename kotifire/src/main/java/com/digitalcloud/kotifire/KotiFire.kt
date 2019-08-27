@@ -6,7 +6,7 @@
 package com.digitalcloud.kotifire
 
 import android.content.Context
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import com.orhanobut.hawk.Hawk
 
 /**
@@ -38,8 +38,8 @@ class KotiFire private constructor(url: String, arrayMap: ArrayMap<String, Strin
 
     companion object {
 
-        private lateinit var baseUrl: String
-        private lateinit var headers: ArrayMap<String, String>
+        private var baseUrl: String = ""
+        private var headers: ArrayMap<String, String> = ArrayMap()
 
         private var ourInstance: KotiFire? = null
 

@@ -6,7 +6,7 @@
 package com.digitalcloud.kotifireexample
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.digitalcloud.kotifire.DataHandler
 import com.digitalcloud.kotifire.KotiFireManager
 import com.digitalcloud.kotifire.SourceType
@@ -23,24 +23,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun makeGetRequest() {
-        KotiFireManager(this, Any::class).getCacheThenNetwork("/json", object : DataHandler<Any>() {
+        KotiFireManager(this, Any::class).getCacheThenNetwork(
+            "/users",
+            object : DataHandler<Any>() {
 
-            override fun onSuccess(objects: ArrayList<Any>, source: SourceType) {
-                handleResponseAsArrayList(objects)
-            }
+                override fun onSuccess(objects: ArrayList<Any>, source: SourceType) {
+                    handleResponseAsArrayList(objects)
+                }
 
-            override fun onSuccess(t: Any, source: SourceType) {
-                handleResponseAsObject(t)
-            }
+                override fun onSuccess(t: Any, source: SourceType) {
+                    handleResponseAsObject(t)
+                }
 
-            override fun onSuccess(response: String, source: SourceType) {
-                textView.text = (response)
-            }
+                override fun onSuccess(response: String, source: SourceType) {
+                    textView.text = (response)
+                }
 
-            override fun onFail(o: Any, isConnectToInternet: Boolean) {
-                handleFail(o)
-            }
-        })
+                override fun onFail(o: Any, isConnectToInternet: Boolean) {
+                    handleFail(o)
+                }
+            })
     }
 
     private fun handleResponseAsArrayList(objects: ArrayList<Any>) {
@@ -50,5 +52,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleFail(o: Any) {
+        textView.text = DataHandler.getNetworkErrorMessage(o)
     }
 }

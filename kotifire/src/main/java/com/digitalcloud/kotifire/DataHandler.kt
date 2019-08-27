@@ -5,7 +5,6 @@
 
 package com.digitalcloud.kotifire
 
-import android.support.v4.util.ArrayMap
 import android.util.Log
 import java.util.*
 
@@ -22,8 +21,8 @@ open class DataHandler<T> : DataHandlerInterface<T> {
         fun getNetworkErrorMessage(o: Any): String {
             return when (o) {
                 is String -> o.toString()
-                is ArrayMap<*, *> -> {
-                    val map = o as ArrayMap<*, *>?
+                is androidx.collection.ArrayMap<*, *> -> {
+                    val map = o as androidx.collection.ArrayMap<*, *>?
                     map!![map.keyAt(0)] as String
                 }
                 else -> ""

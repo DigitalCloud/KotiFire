@@ -6,7 +6,7 @@
 package com.digitalcloud.kotifire.provides.network.volley
 
 import android.content.Context
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import android.util.Log
 import com.android.volley.Request
 import com.android.volley.Response
@@ -44,7 +44,11 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         makeStringRequest(Request.Method.POST, url, dataHandler)
     }
 
-    override fun post(url: String, requestModel: RequestModel, dataHandler: DataHandlerInterface<T>) {
+    override fun post(
+        url: String,
+        requestModel: RequestModel,
+        dataHandler: DataHandlerInterface<T>
+    ) {
         Log.e(TAG, "post url : $url")
         makeStringRequest(Request.Method.POST, url, requestModel.generatePostParams(), dataHandler)
     }
@@ -64,20 +68,19 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         Log.e(TAG, "postWithImage url : $url")
 
         val volleyMultipartRequest =
-            object : VolleyMultipartRequest(Request.Method.POST, url, Response.Listener { response ->
-                val data = String(response.data)
-                Log.e(TAG, data)
-                handleResponse(data, dataHandler)
-            }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+            object :
+                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
+                    val data = String(response.data)
+                    Log.e(TAG, data)
+                    handleResponse(data, dataHandler)
+                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
 
-                protected override val byteData: Map<String, DataPart>?
+                override val byteData: Map<String, DataPart>?
                     get() {
                         val params = ArrayMap<String, DataPart>()
-                        if (imagePath != null) {
-                            params["image"] =
-                                    DataPart(imagePath, "image/jpeg")
-                            Log.e("image_path", imagePath)
-                        }
+                        params["image"] =
+                            DataPart(imagePath, "image/jpeg")
+                        Log.e("image_path", imagePath)
                         return params
                     }
 
@@ -89,7 +92,11 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
     }
 
-    override fun postWithImages(url: String, params: ArrayMap<String, DataPart>, dataHandler: DataHandlerInterface<T>) {
+    override fun postWithImages(
+        url: String,
+        params: ArrayMap<String, DataPart>,
+        dataHandler: DataHandlerInterface<T>
+    ) {
         var url = url
 
         if (!url.startsWith("http")) {
@@ -99,13 +106,14 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         Log.e(TAG, "postWithImage url : $url")
 
         val volleyMultipartRequest =
-            object : VolleyMultipartRequest(Request.Method.POST, url, Response.Listener { response ->
-                val data = String(response.data)
-                Log.e(TAG, data)
-                handleResponse(data, dataHandler)
-            }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }
-            ) {
-                protected override val byteData: Map<String, DataPart>?
+            object :
+                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
+                    val data = String(response.data)
+                    Log.e(TAG, data)
+                    handleResponse(data, dataHandler)
+                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }
+                ) {
+                override val byteData: Map<String, DataPart>?
                     get() = params
             }
 
@@ -127,13 +135,14 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         Log.e(TAG, "postWithImage url : $url")
 
         val volleyMultipartRequest =
-            object : VolleyMultipartRequest(Request.Method.POST, url, Response.Listener { response ->
-                val data = String(response.data)
-                Log.e(TAG, data)
-                handleResponse(data, dataHandler)
-            }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+            object :
+                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
+                    val data = String(response.data)
+                    Log.e(TAG, data)
+                    handleResponse(data, dataHandler)
+                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
 
-                protected override val byteData: Map<String, DataPart>?
+                override val byteData: Map<String, DataPart>?
                     get() = params
 
                 override fun getParams(): Map<String, String> {
@@ -149,7 +158,11 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         makeStringRequest(Request.Method.PUT, url, dataHandler)
     }
 
-    override fun put(url: String, requestModel: RequestModel, dataHandler: DataHandlerInterface<T>) {
+    override fun put(
+        url: String,
+        requestModel: RequestModel,
+        dataHandler: DataHandlerInterface<T>
+    ) {
         Log.e(TAG, "put url : $url")
         makeStringRequest(Request.Method.PUT, url, requestModel.generatePostParams(), dataHandler)
     }
@@ -163,7 +176,11 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         makeStringRequest(Request.Method.POST, url, params, dataHandler)
     }
 
-    override fun patch(url: String, requestModel: RequestModel, dataHandler: DataHandlerInterface<T>) {
+    override fun patch(
+        url: String,
+        requestModel: RequestModel,
+        dataHandler: DataHandlerInterface<T>
+    ) {
         Log.e(TAG, "patch url : $url")
 
         val params = requestModel.generatePostParams()
@@ -177,9 +194,18 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         makeStringRequest(Request.Method.DELETE, url, dataHandler)
     }
 
-    override fun delete(url: String, requestModel: RequestModel, dataHandler: DataHandlerInterface<T>) {
+    override fun delete(
+        url: String,
+        requestModel: RequestModel,
+        dataHandler: DataHandlerInterface<T>
+    ) {
         Log.e(TAG, "delete url : $url")
-        makeStringRequest(Request.Method.DELETE, url, requestModel.generatePostParams(), dataHandler)
+        makeStringRequest(
+            Request.Method.DELETE,
+            url,
+            requestModel.generatePostParams(),
+            dataHandler
+        )
     }
 
     private fun makeStringRequest(method: Int, url: String, dataHandler: DataHandlerInterface<T>) {
@@ -203,7 +229,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private fun makeStringRequest(
         method: Int,
         url: String,
-        params: ArrayMap<String, String>,
+        params: androidx.collection.ArrayMap<String, String>,
         dataHandler: DataHandlerInterface<T>
     ) {
         var url = url
@@ -231,8 +257,9 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
         when (type) {
-            String::class -> {
-                //dataHandler.onSuccess(response, SourceType.NETWORK)
+            String::class,
+            Any::class -> {
+                dataHandler.onSuccess(response, SourceType.NETWORK)
             }
             ResponseModel::class -> dataHandler.onSuccess(
                 gson.fromJson<T>(response, type.java),
@@ -246,8 +273,8 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                     val jsonArray = JSONArray(data)
                     for (i in 0 until jsonArray.length()) {
                         val jsonString = jsonArray.get(i).toString()
-                        val `object` = gson.fromJson(jsonString, type.java)
-                        tArrayList.add(`object`)
+                        val mData = gson.fromJson(jsonString, type.java)
+                        tArrayList.add(mData)
                     }
                     dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
                 } catch (e: Exception) {
@@ -319,7 +346,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
 
     }
 
-    private fun extractErrorMessages(errorResponse: String): ArrayMap<String, String> {
+    private fun extractErrorMessages(errorResponse: String): androidx.collection.ArrayMap<String, String> {
 
         val messages = ArrayMap<String, String>()
 

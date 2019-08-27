@@ -12,12 +12,12 @@ import com.google.gson.Gson
  * for more details : a.hussein@dce.sa
  */
 data class ResponseModel(
-        var message: String = "",
-        var go_to: String = "",
-        var data: Any = Any(),
-        var errors: Any = Any(),
-        var remember_token: String = "",
-        var access_token: String = ""
+    var message: String = "",
+    var go_to: String = "",
+    var data: Any = Any(),
+    var errors: Any = Any(),
+    var remember_token: String = "",
+    var access_token: String = ""
 ) {
     val dataAsString: String
         get() = Gson().toJson(data)
