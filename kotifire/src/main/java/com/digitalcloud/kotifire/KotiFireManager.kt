@@ -7,18 +7,17 @@ package com.digitalcloud.kotifire
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.util.Log
 import androidx.collection.ArrayMap
 import com.digitalcloud.kotifire.models.RequestModel
-import com.digitalcloud.kotifire.models.ResponseModel
 import com.digitalcloud.kotifire.provides.cache.CacheProvider
 import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
-import com.digitalcloud.kotifire.provides.network.BaseNetworkProvider
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
-import com.digitalcloud.kotifire.provides.network.asyncHttp.AsyncHttpProvider
 import com.digitalcloud.kotifire.provides.network.volley.DataPart
 import com.digitalcloud.kotifire.provides.network.volley.VolleyNetworkProvider
 import com.google.gson.Gson
-import org.json.JSONArray
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -36,9 +35,6 @@ class KotiFireManager<T : Any>(private val context: Context, val type: KClass<T>
 
     private val networkProvider: NetworkProvider<T>
         get() = VolleyNetworkProvider(context, type)
-
-    private val baseNetworkProvider: BaseNetworkProvider
-        get() = AsyncHttpProvider()
 
     fun postNetworkOnly(url: String, dataHandler: DataHandler<T>) {
         networkProvider.post(url, dataHandler)
@@ -239,38 +235,5 @@ class KotiFireManager<T : Any>(private val context: Context, val type: KClass<T>
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = cm.activeNetworkInfo
         return activeNetwork.isConnected
-    }
-
-    private fun handleSuccessResponse(response: String, dataHandler: DataHandler<T>) {
-        when (type) {
-            ResponseModel::class -> dataHandler.onSuccess(
-                gson.fromJson<T>(response, type.java),
-                SourceType.NETWORK
-            )
-            else -> {
-                val responseModel = gson.fromJson(response, ResponseModel::class.java)
-                val data = responseModel.dataAsString
-                try {
-                    val tArrayList = ArrayList<T>()
-                    val jsonArray = JSONArray(data)
-                    for (i in 0 until jsonArray.length()) {
-                        val jsonString = jsonArray.get(i).toString()
-                        val `object` = gson.fromJson(jsonString, type.java)
-                        tArrayList.add(`object`)
-                    }
-                    dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
-                } catch (e: Exception) {
-                    try {
-                        dataHandler.onSuccess(gson.fromJson(data, type.java), SourceType.NETWORK)
-                    } catch (e: Exception) {
-                        dataHandler.onSuccess(data, SourceType.NETWORK)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun handleFailureResponse(statusCode: Int, response: String) {
-
     }
 }

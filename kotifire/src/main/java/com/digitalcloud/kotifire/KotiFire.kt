@@ -52,7 +52,7 @@ class KotiFire private constructor(url: String, arrayMap: ArrayMap<String, Strin
         val instance: KotiFire
             get() {
                 if (ourInstance == null)
-                    throw NullPointerException("Repository must be initialize")
+                    throw NullPointerException("KotiFire must be initialize")
 
                 return ourInstance as KotiFire
             }

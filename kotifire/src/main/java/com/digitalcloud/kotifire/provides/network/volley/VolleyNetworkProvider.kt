@@ -14,11 +14,12 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.digitalcloud.kotifire.KotiFire
 import com.digitalcloud.kotifire.DataHandlerInterface
+import com.digitalcloud.kotifire.KotiRequest
 import com.digitalcloud.kotifire.models.RequestModel
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
 import com.digitalcloud.kotifire.SourceType
-import com.digitalcloud.kotifire.models.ResponseModel
 import com.google.gson.Gson
+import org.greenrobot.eventbus.EventBus
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
@@ -229,7 +230,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private fun makeStringRequest(
         method: Int,
         url: String,
-        params: androidx.collection.ArrayMap<String, String>,
+        params: ArrayMap<String, String>,
         dataHandler: DataHandlerInterface<T>
     ) {
         var url = url
@@ -261,16 +262,10 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
             Any::class -> {
                 dataHandler.onSuccess(response, SourceType.NETWORK)
             }
-            ResponseModel::class -> dataHandler.onSuccess(
-                gson.fromJson<T>(response, type.java),
-                SourceType.NETWORK
-            )
             else -> {
-                val responseModel = gson.fromJson(response, ResponseModel::class.java)
-                val data = responseModel.dataAsString
                 try {
                     val tArrayList = ArrayList<T>()
-                    val jsonArray = JSONArray(data)
+                    val jsonArray = JSONArray(response)
                     for (i in 0 until jsonArray.length()) {
                         val jsonString = jsonArray.get(i).toString()
                         val mData = gson.fromJson(jsonString, type.java)
@@ -278,7 +273,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                     }
                     dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
                 } catch (e: Exception) {
-                    dataHandler.onSuccess(gson.fromJson(data, type.java), SourceType.NETWORK)
+                    dataHandler.onSuccess(gson.fromJson(response, type.java), SourceType.NETWORK)
                 }
             }
         }
@@ -290,26 +285,11 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                 if (error?.networkResponse != null) {
 
                     val response = String(error.networkResponse.data)
-                    val responseModel = gson.fromJson(response, ResponseModel::class.java)
 
                     Log.e(TAG, "statusCode : " + error.networkResponse.statusCode)
                     Log.e(TAG, "response : $response")
 
-                    if (error.networkResponse.statusCode == 401) {
-                        goToUserGuideActivity()
-                        return
-                    }
-
-                    if (error.networkResponse.statusCode == 505) {
-                        showForceUpdate()
-                        return
-                    }
-
-                    if (responseModel != null && !responseModel.go_to.isNullOrEmpty()) {
-                        goToReActivateUserActivity()
-                        return
-                    }
-
+                    postEventBus(StatusCodeEvent(error.networkResponse.statusCode))
                     dataHandler.onFail(extractErrorMessages(response), false)
                 } else {
                     Log.e(
@@ -333,23 +313,12 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
 
     }
 
-    private fun goToReActivateUserActivity() {
-
+    private fun postEventBus(mStatusCodeEvent: StatusCodeEvent) {
+        EventBus.getDefault().post(mStatusCodeEvent)
     }
 
-    private fun showForceUpdate() {
-
-    }
-
-    private fun goToUserGuideActivity() {
-
-
-    }
-
-    private fun extractErrorMessages(errorResponse: String): androidx.collection.ArrayMap<String, String> {
-
+    private fun extractErrorMessages(errorResponse: String): ArrayMap<String, String> {
         val messages = ArrayMap<String, String>()
-
         try {
             val jsonObject = JSONObject(errorResponse)
             val message = jsonObject.optString("message")
@@ -382,5 +351,13 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         }
 
         return messages
+    }
+
+    fun makeRequest(mKotiRequest: KotiRequest<T>) {
+
+        val url = mKotiRequest.baseURl + mKotiRequest.endpoint
+
+        makeStringRequest(mKotiRequest.method.type, url, mKotiRequest.mDataHandler!!)
+
     }
 }

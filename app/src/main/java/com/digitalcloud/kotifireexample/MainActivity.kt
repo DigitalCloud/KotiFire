@@ -6,12 +6,15 @@
 package com.digitalcloud.kotifireexample
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.digitalcloud.kotifire.DataHandler
-import com.digitalcloud.kotifire.KotiFireManager
-import com.digitalcloud.kotifire.SourceType
+import com.digitalcloud.kotifire.*
+import com.digitalcloud.kotifire.provides.network.volley.StatusCodeEvent
 import kotlinx.android.synthetic.main.activity_main.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,27 +25,34 @@ class MainActivity : AppCompatActivity() {
         makeGetRequest()
     }
 
+    public override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    public override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
     private fun makeGetRequest() {
-        KotiFireManager(this, Any::class).getCacheThenNetwork(
-            "/users",
-            object : DataHandler<Any>() {
+        val request = KotiRequest(String::class)
+        request.endpoint = "/users"
+        request.method = KotiMethod.GET
+        request.mDataHandler = object : DataHandler<String>() {
+            override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
+            }
 
-                override fun onSuccess(objects: ArrayList<Any>, source: SourceType) {
-                    handleResponseAsArrayList(objects)
-                }
+            override fun onSuccess(t: String, source: SourceType) {
+                handleResponseAsObject(t)
+            }
 
-                override fun onSuccess(t: Any, source: SourceType) {
-                    handleResponseAsObject(t)
-                }
+            override fun onFail(o: Any, isConnectToInternet: Boolean) {
+                handleFail(o)
+            }
+        }
 
-                override fun onSuccess(response: String, source: SourceType) {
-                    textView.text = (response)
-                }
-
-                override fun onFail(o: Any, isConnectToInternet: Boolean) {
-                    handleFail(o)
-                }
-            })
+        KotiFireProvider().execute(this, request)
     }
 
     private fun handleResponseAsArrayList(objects: ArrayList<Any>) {
@@ -54,4 +64,9 @@ class MainActivity : AppCompatActivity() {
     private fun handleFail(o: Any) {
         textView.text = DataHandler.getNetworkErrorMessage(o)
     }
+
+    @Subscribe()
+    fun onMessageEvent(event: StatusCodeEvent) {
+        Log.e("Error", "Status Code : " + event.statusCode)
+    };
 }
