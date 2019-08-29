@@ -354,10 +354,8 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     }
 
     fun makeRequest(mKotiRequest: KotiRequest<T>) {
-
         val url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
-        makeStringRequest(mKotiRequest.method.type, url, mKotiRequest.mDataHandler!!)
-
+        makeStringRequest(mKotiRequest.method.type, url, mKotiRequest.params, mKotiRequest.mDataHandler!!)
     }
 }

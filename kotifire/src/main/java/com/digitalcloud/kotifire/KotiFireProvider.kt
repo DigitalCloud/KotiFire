@@ -7,44 +7,54 @@ package com.digitalcloud.kotifire
 
 import android.content.Context
 import android.util.Log
+import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
 import com.digitalcloud.kotifire.provides.network.volley.VolleyNetworkProvider
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 /**
  * Created by Abdullah Hussein on 11/14/2018.
  * for more details : a.hussein@dce.sa
  */
 
-class KotiFireProvider {
+class KotiFireProvider<T : Any>(
+    private var mContext: Context,
+    private var mKotiRequest: KotiRequest<T>
+) {
 
-    fun <T : Any> execute(context: Context, mKotiRequest: KotiRequest<T>) {
-        GlobalScope.launch {
-            runCatching {
-                executeKotiRequest(context ,mKotiRequest)
-            }.onFailure(::handleFailure)
-        }
-    }
+    private var mHawkCacheProvider = HawkCacheProvider(mContext, mKotiRequest.responseType)
+    private var mVolleyNetworkProvider = VolleyNetworkProvider(mContext, mKotiRequest.responseType)
 
-    private fun <T : Any> executeKotiRequest(context: Context , mKotiRequest: KotiRequest<T>) {
+    fun execute() {
         when (mKotiRequest.cachingType) {
             KotiCachePolicy.CACHE_ONLY -> {
+                requestCacheOnly()
             }
             KotiCachePolicy.NETWORK_ONLY -> {
-                requestNetworkOnly(context, mKotiRequest)
+                requestNetworkOnly()
             }
             KotiCachePolicy.CACHE_THEN_NETWORK -> {
+                requestCacheThenNetworkOnly()
             }
             KotiCachePolicy.NETWORK_ELSE_CACHE -> {
+                requestNetworkElseCacheOnly()
             }
         }
     }
 
-    private fun <T : Any>  requestNetworkOnly(context: Context , mKotiRequest: KotiRequest<T>) {
-        VolleyNetworkProvider(context,  mKotiRequest.responseType).makeRequest(mKotiRequest)
+    private fun requestCacheOnly() {
+        mHawkCacheProvider.makeRequest(mKotiRequest)
     }
 
-    private fun handleFailure(throwable: Throwable) {
-        Log.e("Error", throwable.localizedMessage)
+    private fun requestNetworkOnly() {
+        mVolleyNetworkProvider.makeRequest(mKotiRequest)
+    }
+
+    private fun requestCacheThenNetworkOnly() {
+        mHawkCacheProvider.makeRequest(mKotiRequest)
+        mVolleyNetworkProvider.makeRequest(mKotiRequest)
+    }
+
+    private fun requestNetworkElseCacheOnly() {
+        mVolleyNetworkProvider.makeRequest(mKotiRequest)
+        mHawkCacheProvider.makeRequest(mKotiRequest)
     }
 }

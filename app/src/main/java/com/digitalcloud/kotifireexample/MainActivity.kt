@@ -52,13 +52,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        KotiFireProvider().execute(this, request)
+        KotiFireProvider(this, request).execute()
     }
 
-    private fun handleResponseAsArrayList(objects: ArrayList<Any>) {
-    }
-
-    private fun handleResponseAsObject(t: Any) {
+    private fun handleResponseAsObject(t: String) {
+        textView.text = t
     }
 
     private fun handleFail(o: Any) {

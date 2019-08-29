@@ -7,6 +7,7 @@ package com.digitalcloud.kotifire.provides.cache
 
 import android.content.Context
 import com.digitalcloud.kotifire.DataHandler
+import com.digitalcloud.kotifire.KotiRequest
 import com.digitalcloud.kotifire.SourceType
 import com.google.gson.Gson
 import com.orhanobut.hawk.Hawk
@@ -74,5 +75,10 @@ internal class HawkCacheProvider<T : Any> internal constructor(context: Context,
         if (!contains(key)) return true
         val tCache = get(key)
         return data.hashCode() != tCache.hashCode()
+    }
+
+    fun makeRequest(mKotiRequest: KotiRequest<T>) {
+
+
     }
 }
