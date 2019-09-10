@@ -78,7 +78,22 @@ internal class HawkCacheProvider<T : Any> internal constructor(context: Context,
     }
 
     fun makeRequest(mKotiRequest: KotiRequest<T>) {
+        val url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
+        if (!contains(url)) return
 
+        val data = get(url)
+        try {
+            if (data is ArrayList<*>) {
+                val objects = data as ArrayList<T>
+                mKotiRequest.mDataHandler!!.onSuccess(objects, SourceType.CACHE)
+            } else {
+                if (type.isInstance(data)) {
+                    mKotiRequest.mDataHandler!!.onSuccess(data, SourceType.CACHE)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
