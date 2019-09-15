@@ -55,6 +55,27 @@ class MainActivity : AppCompatActivity() {
         KotiFireProvider(this, request).execute()
     }
 
+    private fun makePostRequest() {
+
+        val request = KotiRequest(String::class)
+        request.endpoint = "/users"
+        request.method = KotiMethod.GET
+        request.mDataHandler = object : DataHandler<String>() {
+            override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
+            }
+
+            override fun onSuccess(t: String, source: SourceType) {
+                handleResponseAsObject(t)
+            }
+
+            override fun onFail(o: Any, isConnectToInternet: Boolean) {
+                handleFail(o)
+            }
+        }
+
+        KotiFireProvider(this, request).execute()
+    }
+
     private fun handleResponseAsObject(t: String) {
         textView.text = t
     }

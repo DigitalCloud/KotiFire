@@ -36,7 +36,7 @@ object NetworkHeadersUtil {
             headers[APP_VERSION_HEADER] = BuildConfig.VERSION_NAME
             headers[LANGUAGE_HEADER] = "YOUR ACCEPT LANGUAGE"   //ADD ACCEPT LANGUAGE
             headers[AUTHORIZATION_HEADER] = "YOUR ACCESS TOKEN" //ADD ACCESS TOKEN
-            Log.e(TAG, "headers : " + headers.toString())
+            Log.e(TAG, "headers : $headers")
             return headers
         }
 }
