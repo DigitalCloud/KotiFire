@@ -310,7 +310,6 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
             e.printStackTrace()
             dataHandler!!.onFail(e.localizedMessage, false)
         }
-
     }
 
     private fun postEventBus(mStatusCodeEvent: StatusCodeEvent) {
@@ -355,7 +354,6 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
 
     fun makeRequest(mKotiRequest: KotiRequest<T>) {
         val url = mKotiRequest.baseURl + mKotiRequest.endpoint
-
         makeStringRequest(mKotiRequest.method.type, url, mKotiRequest.params, mKotiRequest.mDataHandler!!)
     }
 }
