@@ -13,6 +13,7 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.digitalcloud.kotifire.*
+import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
 import com.google.gson.Gson
 import org.greenrobot.eventbus.EventBus
@@ -31,8 +32,13 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private val TAG = "VolleyNetworkProvider"
     private val gson = Gson()
 
+    private var mHawkCacheProvider = HawkCacheProvider(context, type)
+
+    private var url = ""
+    private var mKotiCachePolicy = KotiCachePolicy.NETWORK_ONLY
+
     override fun makeRequest(mKotiRequest: KotiRequest<T>) {
-        var url = mKotiRequest.baseURl + mKotiRequest.endpoint
+        url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
         val params: ArrayMap<String, String> = if (mKotiRequest.method.type == Request.Method.GET) {
             url += mKotiRequest.params.generateGetParams()
@@ -46,6 +52,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
             mKotiRequest.method = KotiMethod.POST
         }
 
+        mKotiCachePolicy = mKotiRequest.cachingType
 
         if (mKotiRequest.files.isEmpty) {
             makeStringRequest(
@@ -136,10 +143,16 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     }
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
+
+        val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
+
         when (type) {
             String::class,
             Any::class -> {
-                dataHandler.onSuccess(response, SourceType.NETWORK)
+                if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
+                    dataHandler.onSuccess(response, SourceType.NETWORK)
+                    mHawkCacheProvider.put(url, response)
+                }
             }
             else -> {
                 try {
@@ -150,9 +163,18 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                         val mData = gson.fromJson(jsonString, type.java)
                         tArrayList.add(mData)
                     }
-                    dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
+
+                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, tArrayList)) {
+                        dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
+                        mHawkCacheProvider.put(url, tArrayList)
+
+                    }
                 } catch (e: Exception) {
-                    dataHandler.onSuccess(gson.fromJson(response, type.java), SourceType.NETWORK)
+                    val res = gson.fromJson(response, type.java)
+                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, res)) {
+                        dataHandler.onSuccess(res, SourceType.NETWORK)
+                        mHawkCacheProvider.put(url, res)
+                    }
                 }
             }
         }

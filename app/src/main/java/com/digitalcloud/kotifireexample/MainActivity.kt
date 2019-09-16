@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         val request = KotiRequest(String::class)
         request.endpoint = "/users"
         request.method = KotiMethod.GET
+        request.cachingType = KotiCachePolicy.CACHE_THEN_NETWORK
         request.mDataHandler = object : DataHandler<String>() {
             override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
             }
