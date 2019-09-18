@@ -6,6 +6,7 @@
 package com.digitalcloud.kotifireexample
 
 import android.app.Application
+import com.digitalcloud.kotifire.KotiFire
 
 /**
  * Created by Abdullah Hussein on 11/12/2018.
