@@ -6,6 +6,7 @@
 package com.digitalcloud.kotifire.provides.cache
 
 import android.content.Context
+import android.util.Log
 import com.digitalcloud.kotifire.DataHandler
 import com.digitalcloud.kotifire.KotiRequest
 import com.digitalcloud.kotifire.SourceType
@@ -28,6 +29,10 @@ internal class HawkCacheProvider<T : Any> internal constructor(context: Context,
 
     private operator fun contains(key: String): Boolean {
         return Hawk.contains(key)
+    }
+
+    fun put(url: String, t: String): Boolean {
+        return Hawk.put(url, t)
     }
 
     override fun put(url: String, t: T): Boolean {
@@ -80,9 +85,13 @@ internal class HawkCacheProvider<T : Any> internal constructor(context: Context,
     fun makeRequest(mKotiRequest: KotiRequest<T>) {
         val url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
+        Log.e("Error", "makeCacheRequest url : $url")
+
         if (!contains(url)) return
 
         val data = get(url)
+        Log.e("Error", "Cache Data : $data")
+
         try {
             if (data is ArrayList<*>) {
                 val objects = data as ArrayList<T>

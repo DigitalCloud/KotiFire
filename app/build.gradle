@@ -1,6 +1,7 @@
 /*
  * Copyright (c) Abdullah Hussein Dce
  * a.hussein@dce.sa
+ * abdullah.hussein109@gmail.com
  */
 
 apply plugin: 'com.android.application'
@@ -54,13 +55,13 @@ android {
 }
 
 dependencies {
-    implementation project(':kotifire')
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'org.greenrobot:eventbus:3.1.1'
+
+    implementation 'com.digitalcloud:kotifire:1.0.0'
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.6.0'

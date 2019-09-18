@@ -8,13 +8,10 @@ package com.digitalcloud.kotifireexample
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.digitalcloud.kotifire.*
-import com.digitalcloud.kotifire.provides.network.volley.StatusCodeEvent
 import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.util.*
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,6 +33,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun makeGetRequest() {
+        val request = KotiRequest(String::class)
+        request.endpoint = "/users"
+        request.method = KotiMethod.GET
+        request.cachingType = KotiCachePolicy.CACHE_THEN_NETWORK
+        request.mDataHandler = object : DataHandler<String>() {
+            override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
+            }
+
+            override fun onSuccess(t: String, source: SourceType) {
+                handleResponseAsObject(t)
+            }
+
+            override fun onFail(o: Any, isConnectToInternet: Boolean) {
+                handleFail(o)
+            }
+        }
+
+        KotiFireProvider(this, request).execute()
+    }
+
+    private fun makePostRequest() {
+
         val request = KotiRequest(String::class)
         request.endpoint = "/users"
         request.method = KotiMethod.GET

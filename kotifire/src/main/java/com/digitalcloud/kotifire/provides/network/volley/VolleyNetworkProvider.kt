@@ -12,6 +12,8 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
+import com.digitalcloud.kotifire.*
+import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
 import com.digitalcloud.kotifire.KotiFire
 import com.digitalcloud.kotifire.DataHandlerInterface
 import com.digitalcloud.kotifire.KotiRequest
@@ -35,196 +37,49 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private val TAG = "VolleyNetworkProvider"
     private val gson = Gson()
 
-    override fun get(url: String, dataHandler: DataHandlerInterface<T>) {
-        Log.e(TAG, "get url : $url")
-        makeStringRequest(Request.Method.GET, url, dataHandler)
-    }
+    private var mHawkCacheProvider = HawkCacheProvider(context, type)
 
-    override fun post(url: String, dataHandler: DataHandlerInterface<T>) {
-        Log.e(TAG, "post url : $url")
-        makeStringRequest(Request.Method.POST, url, dataHandler)
-    }
+    private var url = ""
+    private var mKotiCachePolicy = KotiCachePolicy.NETWORK_ONLY
 
-    override fun post(
-        url: String,
-        requestModel: RequestModel,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        Log.e(TAG, "post url : $url")
-        makeStringRequest(Request.Method.POST, url, requestModel.generatePostParams(), dataHandler)
-    }
+    override fun makeRequest(mKotiRequest: KotiRequest<T>) {
+        url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
-    override fun postWithImage(
-        url: String,
-        requestModel: RequestModel,
-        imagePath: String,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var url = url
-
-        if (!url.startsWith("http")) {
-            url = KotiFire.instance.getBaseUrl() + url
+        val params: ArrayMap<String, String> = if (mKotiRequest.method.type == Request.Method.GET) {
+            url += mKotiRequest.params.generateGetParams()
+            ArrayMap()
+        } else {
+            mKotiRequest.params.generatePostParams()
         }
 
-        Log.e(TAG, "postWithImage url : $url")
+        if (mKotiRequest.method.type == Request.Method.PATCH) {
+            params["_method"] = "patch"
+            mKotiRequest.method = KotiMethod.POST
+        }
 
-        val volleyMultipartRequest =
-            object :
-                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
-                    val data = String(response.data)
-                    Log.e(TAG, data)
-                    handleResponse(data, dataHandler)
-                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+        mKotiCachePolicy = mKotiRequest.cachingType
 
-                override val byteData: Map<String, DataPart>?
-                    get() {
-                        val params = ArrayMap<String, DataPart>()
-                        params["image"] =
-                            DataPart(imagePath, "image/jpeg")
-                        Log.e("image_path", imagePath)
-                        return params
-                    }
-
-                override fun getParams(): Map<String, String> {
-                    return requestModel.generatePostParams()
-                }
+        if (mKotiRequest.files.isEmpty) {
+            makeStringRequest(
+                mKotiRequest.method.type,
+                url,
+                params,
+                mKotiRequest.mDataHandler!!
+            )
+        } else {
+            val multiParts: ArrayMap<String, DataPart> = ArrayMap()
+            mKotiRequest.files.map {
+                multiParts.put(it.key, DataPart(it.value.absolutePath, ""))
             }
 
-        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
-    }
-
-    override fun postWithImages(
-        url: String,
-        params: ArrayMap<String, DataPart>,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var url = url
-
-        if (!url.startsWith("http")) {
-            url = KotiFire.instance.getBaseUrl() + url
+            makeMultiPartRequest(
+                mKotiRequest.method.type,
+                url,
+                params,
+                multiParts,
+                mKotiRequest.mDataHandler!!
+            )
         }
-
-        Log.e(TAG, "postWithImage url : $url")
-
-        val volleyMultipartRequest =
-            object :
-                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
-                    val data = String(response.data)
-                    Log.e(TAG, data)
-                    handleResponse(data, dataHandler)
-                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }
-                ) {
-                override val byteData: Map<String, DataPart>?
-                    get() = params
-            }
-
-        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
-    }
-
-    override fun postWithImages(
-        url: String,
-        requestModel: RequestModel,
-        params: ArrayMap<String, DataPart>,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var url = url
-
-        if (!url.startsWith("http")) {
-            url = KotiFire.instance.getBaseUrl() + url
-        }
-
-        Log.e(TAG, "postWithImage url : $url")
-
-        val volleyMultipartRequest =
-            object :
-                VolleyMultipartRequest(Method.POST, url, Response.Listener { response ->
-                    val data = String(response.data)
-                    Log.e(TAG, data)
-                    handleResponse(data, dataHandler)
-                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
-
-                override val byteData: Map<String, DataPart>?
-                    get() = params
-
-                override fun getParams(): Map<String, String> {
-                    return requestModel.generatePostParams()
-                }
-            }
-
-        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
-    }
-
-    override fun put(url: String, dataHandler: DataHandlerInterface<T>) {
-        Log.e(TAG, "put url : $url")
-        makeStringRequest(Request.Method.PUT, url, dataHandler)
-    }
-
-    override fun put(
-        url: String,
-        requestModel: RequestModel,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        Log.e(TAG, "put url : $url")
-        makeStringRequest(Request.Method.PUT, url, requestModel.generatePostParams(), dataHandler)
-    }
-
-    override fun patch(url: String, dataHandler: DataHandlerInterface<T>) {
-        Log.e(TAG, "patch url : $url")
-
-        val params = ArrayMap<String, String>()
-        params["_method"] = "patch"
-
-        makeStringRequest(Request.Method.POST, url, params, dataHandler)
-    }
-
-    override fun patch(
-        url: String,
-        requestModel: RequestModel,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        Log.e(TAG, "patch url : $url")
-
-        val params = requestModel.generatePostParams()
-        params["_method"] = "patch"
-
-        makeStringRequest(Request.Method.POST, url, params, dataHandler)
-    }
-
-    override fun delete(url: String, dataHandler: DataHandlerInterface<T>) {
-        Log.e(TAG, "delete url : $url")
-        makeStringRequest(Request.Method.DELETE, url, dataHandler)
-    }
-
-    override fun delete(
-        url: String,
-        requestModel: RequestModel,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        Log.e(TAG, "delete url : $url")
-        makeStringRequest(
-            Request.Method.DELETE,
-            url,
-            requestModel.generatePostParams(),
-            dataHandler
-        )
-    }
-
-    private fun makeStringRequest(method: Int, url: String, dataHandler: DataHandlerInterface<T>) {
-        var url = url
-        if (!url.startsWith("http")) {
-            url = KotiFire.instance.getBaseUrl() + url
-        }
-
-        val stringRequest = object : StringRequest(method, url, Response.Listener { response ->
-            Log.e(TAG, response)
-            handleResponse(response, dataHandler)
-        }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
-            override fun getHeaders(): Map<String, String> {
-                return KotiFire.instance.getHeaders()
-            }
-        }
-
-        VolleySingleton.getInstance(context).addToRequestQueue(stringRequest)
     }
 
     private fun makeStringRequest(
@@ -233,13 +88,15 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         params: ArrayMap<String, String>,
         dataHandler: DataHandlerInterface<T>
     ) {
-        var url = url
+        var newUrl = url
 
         if (!url.startsWith("http")) {
-            url = KotiFire.instance.getBaseUrl() + url
+            newUrl = KotiFire.instance.getBaseUrl() + url
         }
 
-        val stringRequest = object : StringRequest(method, url, Response.Listener { response ->
+        Log.e(TAG, "makeStringRequest url : $newUrl")
+
+        val stringRequest = object : StringRequest(method, newUrl, Response.Listener { response ->
             Log.e(TAG, response)
             handleResponse(response, dataHandler)
         }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
@@ -256,11 +113,51 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         VolleySingleton.getInstance(context).addToRequestQueue(stringRequest)
     }
 
+    private fun makeMultiPartRequest(
+        method: Int,
+        url: String,
+        params: ArrayMap<String, String>,
+        multiParts: ArrayMap<String, DataPart>,
+        dataHandler: DataHandlerInterface<T>
+    ) {
+        var newUrl = url
+
+        if (!url.startsWith("http")) {
+            newUrl = KotiFire.instance.getBaseUrl() + url
+        }
+
+        Log.e(TAG, "makeMultiPartRequest url : $newUrl")
+
+        val volleyMultipartRequest =
+            object :
+                VolleyMultipartRequest(method, url, Response.Listener { response ->
+                    val data = String(response.data)
+                    Log.e(TAG, data)
+                    handleResponse(data, dataHandler)
+                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+
+                override val byteData: Map<String, DataPart>?
+                    get() = multiParts
+
+                override fun getParams(): Map<String, String> {
+                    return params
+                }
+            }
+
+        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
+    }
+
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
+
+        val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
+
         when (type) {
             String::class,
             Any::class -> {
-                dataHandler.onSuccess(response, SourceType.NETWORK)
+                if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
+                    dataHandler.onSuccess(response, SourceType.NETWORK)
+                    mHawkCacheProvider.put(url, response)
+                }
             }
             else -> {
                 try {
@@ -271,9 +168,18 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                         val mData = gson.fromJson(jsonString, type.java)
                         tArrayList.add(mData)
                     }
-                    dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
+
+                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, tArrayList)) {
+                        dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
+                        mHawkCacheProvider.put(url, tArrayList)
+
+                    }
                 } catch (e: Exception) {
-                    dataHandler.onSuccess(gson.fromJson(response, type.java), SourceType.NETWORK)
+                    val res = gson.fromJson(response, type.java)
+                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, res)) {
+                        dataHandler.onSuccess(res, SourceType.NETWORK)
+                        mHawkCacheProvider.put(url, res)
+                    }
                 }
             }
         }
@@ -350,10 +256,5 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         }
 
         return messages
-    }
-
-    fun makeRequest(mKotiRequest: KotiRequest<T>) {
-        val url = mKotiRequest.baseURl + mKotiRequest.endpoint
-        makeStringRequest(mKotiRequest.method.type, url, mKotiRequest.params, mKotiRequest.mDataHandler!!)
     }
 }

@@ -11,12 +11,42 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
     }
 }
 
 apply plugin: 'com.android.library'
 
 apply plugin: 'kotlin-android'
+
+apply plugin: 'com.github.dcendents.android-maven'
+
+apply plugin: 'com.jfrog.bintray'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'KotiFire'
+
+    publishedGroupId = 'com.digitalcloud'
+    libraryName = 'kotifire'
+    artifact = 'kotifire'
+
+    libraryDescription = 'Android Networking and Caching Library'
+
+    siteUrl = 'https://github.com/DigitalCloud/KotiFire'
+    gitUrl = 'https://github.com/DigitalCloud/KotiFire.git'
+
+    libraryVersion = '1.0.1'
+
+    developerId = 'abdullahjhussein'
+    developerName = 'Abdullah Hussein'
+    developerEmail = 'abdullah.hussein109@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
 
 android {
     compileSdkVersion 29
@@ -25,7 +55,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,6 +72,15 @@ android {
             useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    tasks.withType(Javadoc).all {
+        enabled = false
     }
 }
 
@@ -60,3 +99,5 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
+
+apply from: 'https://raw.githubusercontent.com/LissF/JCenter/master/script.gradle'

@@ -15,8 +15,6 @@ import java.util.*
  */
 class RequestModel {
 
-    private val TAG = "RequestModel"
-
     fun generatePostParams(): ArrayMap<String, String> {
         val params = ArrayMap<String, String>()
 
@@ -48,7 +46,7 @@ class RequestModel {
 
         }
 
-        Log.e(TAG, "generatePostParams: $params")
+        Log.e("params", "generatePostParams: $params")
 
         return params
     }
@@ -78,7 +76,7 @@ class RequestModel {
                 temp.deleteCharAt(temp.length - 1)
         }
 
-        Log.e(TAG, "generateGetParams: $temp")
+        Log.e("params", "generateGetParams: $temp")
 
         return temp.toString()
     }
