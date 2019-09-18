@@ -24,7 +24,6 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 apply plugin: 'com.jfrog.bintray'
 
-
 ext {
     bintrayRepo = 'maven'
     bintrayName = 'KotiFire'
