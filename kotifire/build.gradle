@@ -37,7 +37,7 @@ ext {
     siteUrl = 'https://github.com/DigitalCloud/KotiFire'
     gitUrl = 'https://github.com/DigitalCloud/KotiFire.git'
 
-    libraryVersion = '1.0.1'
+    libraryVersion = '1.0.2'
 
     developerId = 'abdullahjhussein'
     developerName = 'Abdullah Hussein'
@@ -55,7 +55,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.1"
+        versionName "1.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
