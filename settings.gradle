@@ -1,0 +1,6 @@
+/*
+ * Copyright (c) Abdullah Hussein Dce
+ * a.hussein@dce.sa
+ */
+
+include ':app', ':kotifire'

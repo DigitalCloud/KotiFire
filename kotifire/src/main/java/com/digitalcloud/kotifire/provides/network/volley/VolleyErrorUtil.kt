@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) Abdullah Hussein Dce
+ * a.hussein@dce.sa
+ */
+
+package com.digitalcloud.kotifire.provides.network.volley
+
+import android.content.Context
+import com.android.volley.*
+import com.digitalcloud.kotifire.R
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
+import java.util.HashMap
+
+/**
+ * Created by Abdullah Hussein on 7/4/2018.
+ * for more details : a.hussein@dce.sa
+ */
+
+object VolleyErrorUtil {
+
+    private val gson = Gson()
+
+    /**
+     * Gets message.
+     *
+     * @param error the error
+     * @return the message
+     */
+    fun getMessage(context: Context, error: VolleyError?): String? {
+        try {
+            if (error != null) {
+                if (error is TimeoutError) {
+                    return context.resources.getString(R.string.app_name)
+                } else if (isServerProblem(error)) {
+                    return handleServerError(
+                        context,
+                        error
+                    )
+                } else if (isNetworkProblem(error)) {
+                    return context.resources.getString(R.string.app_name)
+                }
+                return context.resources.getString(R.string.app_name)
+            } else {
+                return context.resources.getString(R.string.app_name)
+            }
+        } catch (e: Exception) {
+            return context.resources.getString(R.string.app_name)
+        }
+
+    }
+
+    private fun handleServerError(context: Context, error: VolleyError): String? {
+        val response = error.networkResponse
+        try {
+            val result = gson.fromJson<HashMap<String, String>>(
+                String(response.data),
+                object : TypeToken<Map<String, String>>() {}.type
+            )
+            return if (result != null && result.containsKey("error")) {
+                result["error"]
+            } else {
+                context.resources.getString(R.string.app_name)
+            }
+        } catch (e: Exception) {
+            return context.resources.getString(R.string.app_name)
+        }
+    }
+
+    private fun isServerProblem(error: Any): Boolean {
+        return error is ServerError || error is AuthFailureError
+    }
+
+    private fun isNetworkProblem(error: Any): Boolean {
+        return error is NetworkError
+    }
+}
