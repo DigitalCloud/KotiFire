@@ -7,6 +7,7 @@ buildscript {
     ext.kotlin_version = '1.3.50'
     repositories {
         jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -25,19 +26,20 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 ext {
-    bintrayRepo = 'maven'
-    bintrayName = 'KotiFire'
+    bintrayRepo = 'KotiFire'
+    bintrayName = 'com.digitalcloud.kotifire'
+
+    libraryName = 'KotiFire'
 
     publishedGroupId = 'com.digitalcloud'
-    libraryName = 'kotifire'
     artifact = 'kotifire'
+    libraryVersion = '1.1.0'
 
     libraryDescription = 'Android Networking and Caching Library'
 
     siteUrl = 'https://github.com/DigitalCloud/KotiFire'
     gitUrl = 'https://github.com/DigitalCloud/KotiFire.git'
 
-    libraryVersion = '1.0.2'
 
     developerId = 'abdullahjhussein'
     developerName = 'Abdullah Hussein'
@@ -55,7 +57,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.2"
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -100,4 +102,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
-apply from: 'https://raw.githubusercontent.com/LissF/JCenter/master/script.gradle'
+if (project.rootProject.file('local.properties').exists()) {
+    apply from: 'https://raw.githubusercontent.com/wajahatkarim3/JCenter-Gradle-Scripts/master/install.gradle'
+    apply from: 'https://raw.githubusercontent.com/wajahatkarim3/JCenter-Gradle-Scripts/master/bintray.gradle'
+}
