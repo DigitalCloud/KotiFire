@@ -7,16 +7,18 @@ package com.digitalcloud.kotifire.models
 
 import androidx.collection.ArrayMap
 import android.util.Log
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.*
 
 /**
  * Created by Abdullah Hussein on 7/4/2018.
  * for more details : a.hussein@dce.sa
  */
-class RequestModel {
+open class RequestModel {
 
-    fun generatePostParams(): ArrayMap<String, String> {
-        val params = ArrayMap<String, String>()
+    fun generatePostParams(): JSONObject {
+        val params = JSONObject()
 
         val fields = javaClass.declaredFields
         for (field in fields) {
@@ -26,24 +28,16 @@ class RequestModel {
                     if (field.name.equals("CREATOR", ignoreCase = true)) continue
                     if (field.name.equals("serialVersionUID", ignoreCase = true)) continue
 
-                    val o = field.get(this)
-                    if (o is ArrayList<*>) {
-                        for (i in o.indices) {
-                            val fieldValue = o[i].toString()
-                            if (fieldValue.isEmpty()) continue
-                            val key = String.format(Locale.ENGLISH, field.name + "[%d]", i)
-                            params[key] = fieldValue
-                        }
+                    val value = field.get(this) ?: continue
+                    if (value is ArrayList<*>) {
+                        params.put(field.name, JSONArray(value))
                     } else {
-                        val fieldValue = o.toString()
-                        if (fieldValue.isEmpty()) continue
-                        params[field.name] = fieldValue
+                        params.put(field.name, value)
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
         }
 
         Log.e("params", "generatePostParams: $params")
@@ -62,7 +56,9 @@ class RequestModel {
                     if (field.name.equals("CREATOR", ignoreCase = true)) continue
                     if (field.name.equals("serialVersionUID", ignoreCase = true)) continue
 
-                    temp.append(field.name).append("=").append(field.get(this)).append("&")
+                    val value = field.get(this) ?: continue
+
+                    temp.append(field.name).append("=").append(value).append("&")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

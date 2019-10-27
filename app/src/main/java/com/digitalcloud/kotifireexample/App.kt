@@ -6,6 +6,8 @@
 package com.digitalcloud.kotifireexample
 
 import android.app.Application
+import com.digitalcloud.kotifire.KotiFire
+import com.digitalcloud.kotifireexample.network.NetworkHeadersUtil
 
 /**
  * Created by Abdullah Hussein on 11/12/2018.

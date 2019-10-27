@@ -8,6 +8,7 @@ package com.digitalcloud.kotifire.provides.network.volley
 import com.android.volley.*
 import com.android.volley.toolbox.HttpHeaderParser
 import com.digitalcloud.kotifire.KotiFire
+import org.json.JSONObject
 
 import java.io.*
 
@@ -29,6 +30,9 @@ open class VolleyMultipartRequest(
     private var mListener: Response.Listener<NetworkResponse> = listener
     private var mErrorListener: Response.ErrorListener = errorListener
 
+    protected open val jsonObject : JSONObject?
+        get() = null
+
     protected open val byteData: Map<String, DataPart>?
         get() = null
 
@@ -47,9 +51,10 @@ open class VolleyMultipartRequest(
 
         try {
             // populate text payload
-            val params = params
-            if (params != null && params.isNotEmpty()) {
-                textParse(dos, params, paramsEncoding)
+            if (jsonObject != null) {
+                dos.writeBytes(twoHyphens + boundary + lineEnd)
+                dos.write(jsonObject.toString().toByteArray())
+                dos.writeBytes(lineEnd)
             }
 
             // populate data byte payload

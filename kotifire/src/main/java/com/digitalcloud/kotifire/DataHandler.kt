@@ -23,7 +23,10 @@ open class DataHandler<T> : DataHandlerInterface<T> {
                 is String -> o.toString()
                 is androidx.collection.ArrayMap<*, *> -> {
                     val map = o as androidx.collection.ArrayMap<*, *>?
-                    map!![map.keyAt(0)] as String
+                    if (map == null || map.isEmpty)
+                        ""
+                    else
+                        map[map.keyAt(0)] as String
                 }
                 else -> ""
             }

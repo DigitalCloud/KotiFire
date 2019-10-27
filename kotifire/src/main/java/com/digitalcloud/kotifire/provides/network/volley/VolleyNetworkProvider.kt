@@ -6,20 +6,15 @@
 package com.digitalcloud.kotifire.provides.network.volley
 
 import android.content.Context
-import androidx.collection.ArrayMap
 import android.util.Log
+import androidx.collection.ArrayMap
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.digitalcloud.kotifire.*
 import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
-import com.digitalcloud.kotifire.KotiFire
-import com.digitalcloud.kotifire.DataHandlerInterface
-import com.digitalcloud.kotifire.KotiRequest
-import com.digitalcloud.kotifire.models.RequestModel
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
-import com.digitalcloud.kotifire.SourceType
 import com.google.gson.Gson
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONArray
@@ -45,15 +40,15 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     override fun makeRequest(mKotiRequest: KotiRequest<T>) {
         url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
-        val params: ArrayMap<String, String> = if (mKotiRequest.method.type == Request.Method.GET) {
+        val params: JSONObject = if (mKotiRequest.method.type == Request.Method.GET) {
             url += mKotiRequest.params.generateGetParams()
-            ArrayMap()
+            JSONObject()
         } else {
             mKotiRequest.params.generatePostParams()
         }
 
         if (mKotiRequest.method.type == Request.Method.PATCH) {
-            params["_method"] = "patch"
+            params.put("_method" ,  "patch")
             mKotiRequest.method = KotiMethod.POST
         }
 
@@ -85,7 +80,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private fun makeStringRequest(
         method: Int,
         url: String,
-        params: ArrayMap<String, String>,
+        params: JSONObject,
         dataHandler: DataHandlerInterface<T>
     ) {
         var newUrl = url
@@ -101,8 +96,16 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
             handleResponse(response, dataHandler)
         }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
 
-            override fun getParams(): Map<String, String> {
-                return params
+            override fun getBodyContentType(): String {
+                return "application/json; charset=utf-8"
+            }
+
+            override fun getBody(): ByteArray {
+                return try {
+                    params.toString().toByteArray(Charsets.UTF_8)
+                } catch (e: Exception) {
+                    super.getBody()
+                }
             }
 
             override fun getHeaders(): Map<String, String> {
@@ -116,7 +119,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
     private fun makeMultiPartRequest(
         method: Int,
         url: String,
-        params: ArrayMap<String, String>,
+        params: JSONObject,
         multiParts: ArrayMap<String, DataPart>,
         dataHandler: DataHandlerInterface<T>
     ) {
@@ -136,12 +139,12 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                     handleResponse(data, dataHandler)
                 }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
 
+                override val jsonObject: JSONObject?
+                    get() = params
+
                 override val byteData: Map<String, DataPart>?
                     get() = multiParts
 
-                override fun getParams(): Map<String, String> {
-                    return params
-                }
             }
 
         VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
