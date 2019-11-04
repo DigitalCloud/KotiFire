@@ -15,13 +15,10 @@ import com.digitalcloud.kotifire.provides.network.volley.VolleyNetworkProvider
  * for more details : a.hussein@dce.sa
  */
 
-class KotiFireProvider<T : Any>(
-    private var mContext: Context,
-    private var mKotiRequest: KotiRequest<T>
-) {
+class KotiFireProvider<T : Any>(private var mKotiRequest: KotiRequest<T>) {
 
-    private var mHawkCacheProvider = HawkCacheProvider(mContext, mKotiRequest.responseType)
-    private var mVolleyNetworkProvider = VolleyNetworkProvider(mContext, mKotiRequest.responseType)
+    private var mHawkCacheProvider = HawkCacheProvider(mKotiRequest.responseType)
+    private var mVolleyNetworkProvider = VolleyNetworkProvider(mKotiRequest.responseType)
 
     fun execute() {
         when (mKotiRequest.cachingType) {

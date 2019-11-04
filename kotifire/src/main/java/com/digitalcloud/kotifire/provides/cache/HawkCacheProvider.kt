@@ -20,8 +20,8 @@ import kotlin.reflect.KClass
  * Created by Abdullah Hussein on 7/3/2018.
  * for more details : a.hussein@dce.sa
  */
-internal class HawkCacheProvider<T : Any> internal constructor(context: Context, type: KClass<T>) :
-    CacheProvider<T>(context, type) {
+internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) :
+    CacheProvider<T>(type) {
 
     private operator fun get(key: String): T {
         return Hawk.get(key)

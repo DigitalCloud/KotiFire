@@ -21,10 +21,19 @@ import java.net.CookiePolicy
  * for more details : a.hussein@dce.sa
  */
 
-class VolleySingleton private constructor() {
+object VolleySingleton {
+
+    private val TAG = VolleySingleton::class.java.simpleName
+    private var mRequestQueue: RequestQueue? = null
+    internal var defaultError: String = "Error Try Again"
+
+    @Synchronized
+    fun initInstance(context: Context) {
+        mRequestQueue = Volley.newRequestQueue(context.applicationContext)
+        CookieHandler.setDefault(CookieManager(null, CookiePolicy.ACCEPT_ALL))
+    }
 
     init {
-        CookieHandler.setDefault(CookieManager(null, CookiePolicy.ACCEPT_ALL))
     }
 
     fun <T> addToRequestQueue(req: Request<T>, tag: String) {
@@ -50,18 +59,4 @@ class VolleySingleton private constructor() {
         }
     }
 
-    companion object {
-        val TAG = VolleySingleton::class.java.simpleName
-        private var mRequestQueue: RequestQueue? = null
-        private var mInstance: VolleySingleton? = null
-
-        @Synchronized
-        fun getInstance(context: Context): VolleySingleton {
-            if (mInstance == null) {
-                mInstance = VolleySingleton()
-                mRequestQueue = Volley.newRequestQueue(context.applicationContext)
-            }
-            return mInstance as VolleySingleton
-        }
-    }
 }

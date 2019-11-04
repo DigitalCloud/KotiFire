@@ -52,10 +52,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        KotiFireProvider(
-            this,
-            UsersAPIs.Users().getKotiRequest(String::class, mDataHandler)
-        ).execute()
+        KotiFireProvider(UsersAPIs.Users().getKotiRequest(String::class, mDataHandler)).execute()
     }
 
     private fun makePostRequest() {
@@ -73,10 +70,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        KotiFireProvider(
-            this,
-            PostsAPIs.CreatePost(Post()).getKotiRequest(String::class, mDataHandler)
-        ).execute()
+        KotiFireProvider(PostsAPIs.CreatePost(Post()).getKotiRequest(String::class, mDataHandler)).execute()
     }
 
     private fun handleResponseAsObject(t: String) {
@@ -90,5 +84,5 @@ class MainActivity : AppCompatActivity() {
     @Subscribe()
     fun onMessageEvent(event: StatusCodeEvent) {
         Log.e("Error", "Status Code : " + event.statusCode)
-    };
+    }
 }

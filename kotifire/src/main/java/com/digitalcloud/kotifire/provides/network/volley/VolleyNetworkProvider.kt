@@ -26,13 +26,13 @@ import kotlin.reflect.KClass
  * Created by Abdullah Hussein on 7/3/2018.
  * for more details : a.hussein@dce.sa
  */
-class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type: KClass<T>) :
-    NetworkProvider<T>(context, type) {
+class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
+    NetworkProvider<T>(type) {
 
     private val TAG = "VolleyNetworkProvider"
     private val gson = Gson()
 
-    private var mHawkCacheProvider = HawkCacheProvider(context, type)
+    private var mHawkCacheProvider = HawkCacheProvider(type)
 
     private var url = ""
     private var mKotiCachePolicy = KotiCachePolicy.NETWORK_ONLY
@@ -48,7 +48,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         }
 
         if (mKotiRequest.method.type == Request.Method.PATCH) {
-            params.put("_method" ,  "patch")
+            params.put("_method", "patch")
             mKotiRequest.method = KotiMethod.POST
         }
 
@@ -113,7 +113,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
             }
         }
 
-        VolleySingleton.getInstance(context).addToRequestQueue(stringRequest)
+        VolleySingleton.addToRequestQueue(stringRequest)
     }
 
     private fun makeMultiPartRequest(
@@ -147,7 +147,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
 
             }
 
-        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
+        VolleySingleton.addToRequestQueue(volleyMultipartRequest)
     }
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
@@ -201,18 +201,8 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
                     postEventBus(StatusCodeEvent(error.networkResponse.statusCode))
                     dataHandler.onFail(extractErrorMessages(response), false)
                 } else {
-                    Log.e(
-                        TAG, "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(
-                            context,
-                            error
-                        )!!
-                    )
-                    dataHandler.onFail(
-                        VolleyErrorUtil.getMessage(
-                            context,
-                            error
-                        )!!, true
-                    )
+                    Log.e(TAG, "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(error))
+                    dataHandler.onFail(VolleyErrorUtil.getMessage(error), true)
                 }
             }
         } catch (e: Exception) {

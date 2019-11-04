@@ -7,6 +7,7 @@ package com.digitalcloud.kotifire
 
 import android.content.Context
 import androidx.collection.ArrayMap
+import com.digitalcloud.kotifire.provides.network.volley.VolleySingleton
 import com.orhanobut.hawk.Hawk
 
 /**
@@ -47,6 +48,7 @@ class KotiFire private constructor(url: String, arrayMap: ArrayMap<String, Strin
         fun initialize(context: Context, baseUrl: String, headers: ArrayMap<String, String>) {
             ourInstance = KotiFire(baseUrl, headers)
             Hawk.init(context).build()
+            VolleySingleton.initInstance(context)
         }
 
         val instance: KotiFire
