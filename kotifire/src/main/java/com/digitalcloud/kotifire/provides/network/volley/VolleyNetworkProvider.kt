@@ -86,7 +86,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         var newUrl = url
 
         if (!url.startsWith("http")) {
-            newUrl = KotiFire.instance.getBaseUrl() + url
+            newUrl = KotiFire.baseUrl + url
         }
 
         Log.e(TAG, "makeStringRequest url : $newUrl")
@@ -109,7 +109,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
             }
 
             override fun getHeaders(): Map<String, String> {
-                return KotiFire.instance.getHeaders()
+                return KotiFire.headers
             }
         }
 
@@ -126,7 +126,7 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         var newUrl = url
 
         if (!url.startsWith("http")) {
-            newUrl = KotiFire.instance.getBaseUrl() + url
+            newUrl = KotiFire.baseUrl + url
         }
 
         Log.e(TAG, "makeMultiPartRequest url : $newUrl")
@@ -219,9 +219,13 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         val messages = ArrayMap<String, String>()
         try {
             val jsonObject = JSONObject(errorResponse)
-            val message = jsonObject.optString("message")
-            val errors = jsonObject.optString("errors")
 
+            val message = jsonObject.optString("message")
+            if (!message.isNullOrEmpty()) {
+                messages["message"] = message
+            }
+
+            val errors = jsonObject.optString("errors")
             if (!errors.isNullOrEmpty()) {
                 val errorsJson = JSONObject(errors)
                 val keys = errorsJson.names()
@@ -235,12 +239,6 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                         }
                         messages[name] = msg
                     }
-                }
-            }
-
-            if (messages.isEmpty) {
-                if (!message.isNullOrEmpty()) {
-                    messages["message"] = message
                 }
             }
 

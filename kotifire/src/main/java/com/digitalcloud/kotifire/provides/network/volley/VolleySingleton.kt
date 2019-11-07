@@ -25,15 +25,17 @@ object VolleySingleton {
 
     private val TAG = VolleySingleton::class.java.simpleName
     private var mRequestQueue: RequestQueue? = null
+
     internal var defaultError: String = "Error Try Again"
+    internal var internetError: String = "Error Try Again"
 
     @Synchronized
-    fun initInstance(context: Context) {
+    fun initInstance(context: Context, defaultError : String, internetError : String) {
         mRequestQueue = Volley.newRequestQueue(context.applicationContext)
         CookieHandler.setDefault(CookieManager(null, CookiePolicy.ACCEPT_ALL))
-    }
 
-    init {
+        this.defaultError = defaultError
+        this.internetError = internetError
     }
 
     fun <T> addToRequestQueue(req: Request<T>, tag: String) {

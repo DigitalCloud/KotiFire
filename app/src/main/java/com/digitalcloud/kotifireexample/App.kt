@@ -19,7 +19,7 @@ class App : Application() {
         super.onCreate()
         KotiFire.initialize(this,
             BuildConfig.BASE_URL,
-            NetworkHeadersUtil.headers
+            NetworkHeadersUtil.headers, ""
         )
     }
 }

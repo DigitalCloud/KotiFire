@@ -37,7 +37,7 @@ open class VolleyMultipartRequest(
         get() = null
 
     override fun getHeaders(): Map<String, String> {
-        return KotiFire.instance.getHeaders()
+        return KotiFire.headers
     }
 
     override fun getBodyContentType(): String {

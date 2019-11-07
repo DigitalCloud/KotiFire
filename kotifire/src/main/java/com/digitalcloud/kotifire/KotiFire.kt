@@ -14,49 +14,21 @@ import com.orhanobut.hawk.Hawk
  * Created by Abdullah Hussein on 11/14/2018.
  * for more details : a.hussein@dce.sa
  */
-class KotiFire private constructor(url: String, arrayMap: ArrayMap<String, String>) {
+object KotiFire {
 
-    init {
-        baseUrl = url
-        headers = arrayMap
-    }
+    var baseUrl: String = ""
+    var headers: ArrayMap<String, String> = ArrayMap()
 
-    fun getBaseUrl(): String {
-        return baseUrl
-    }
+    fun initialize(
+        context: Context,
+        baseUrl: String,
+        headers: ArrayMap<String, String>,
+        internalError: String
+    ) {
+        this.baseUrl = baseUrl
+        this.headers = headers
 
-    fun getHeaders(): ArrayMap<String, String> {
-        return headers
-    }
-
-    fun updateBaseURL(newBaseURL: String) {
-        baseUrl = newBaseURL
-    }
-
-    fun updateHeaders(newHeaders: ArrayMap<String, String>) {
-        headers = newHeaders
-    }
-
-    companion object {
-
-        private var baseUrl: String = ""
-        private var headers: ArrayMap<String, String> = ArrayMap()
-
-        private var ourInstance: KotiFire? = null
-
-        @JvmStatic
-        fun initialize(context: Context, baseUrl: String, headers: ArrayMap<String, String>) {
-            ourInstance = KotiFire(baseUrl, headers)
-            Hawk.init(context).build()
-            VolleySingleton.initInstance(context)
-        }
-
-        val instance: KotiFire
-            get() {
-                if (ourInstance == null)
-                    throw NullPointerException("KotiFire must be initialize")
-
-                return ourInstance as KotiFire
-            }
+        Hawk.init(context).build()
+        VolleySingleton.initInstance(context, internalError, internalError)
     }
 }

@@ -34,7 +34,7 @@ object VolleyErrorUtil {
                 } else if (isServerProblem(error)) {
                     return handleServerError(error)
                 } else if (isNetworkProblem(error)) {
-                    return ""
+                    return VolleySingleton.internetError
                 }
                 return VolleySingleton.defaultError
             } else {
@@ -55,6 +55,8 @@ object VolleyErrorUtil {
             )
             return if (result != null && result.containsKey("error")) {
                 result["error"] ?: VolleySingleton.defaultError
+            } else if (result != null && result.containsKey("message")) {
+                result["message"] ?: VolleySingleton.defaultError
             } else {
                 return VolleySingleton.defaultError
             }
