@@ -32,6 +32,12 @@ open class RequestModel {
                     if (value is ArrayList<*>) {
                         params.put(field.name, JSONArray(value))
                     } else {
+                        if (value is String)
+                            if (value.isEmpty()) continue
+
+                        if (value is Int)
+                            if (value == 0) continue
+
                         params.put(field.name, value)
                     }
                 }

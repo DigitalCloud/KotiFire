@@ -31,4 +31,12 @@ object KotiFire {
         Hawk.init(context).build()
         VolleySingleton.initInstance(context, internalError, internalError)
     }
+
+    fun setNewBaseUrl(baseUrl: String) {
+        this.baseUrl = baseUrl
+    }
+
+    fun setNewHeaders(headers: ArrayMap<String, String>) {
+        this.headers = headers
+    }
 }

@@ -5,7 +5,6 @@
 
 package com.digitalcloud.kotifire.provides.network.volley
 
-import android.content.Context
 import android.util.Log
 import androidx.collection.ArrayMap
 import com.android.volley.Request
@@ -53,6 +52,8 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         }
 
         mKotiCachePolicy = mKotiRequest.cachingType
+
+        KotiFire.setNewHeaders(mKotiRequest.headers)
 
         if (mKotiRequest.files.isEmpty) {
             makeStringRequest(
@@ -245,7 +246,6 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
         return messages
     }
 }
