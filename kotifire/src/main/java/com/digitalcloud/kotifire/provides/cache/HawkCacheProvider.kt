@@ -5,13 +5,13 @@
 
 package com.digitalcloud.kotifire.provides.cache
 
-import android.content.Context
 import android.util.Log
 import com.digitalcloud.kotifire.DataHandler
 import com.digitalcloud.kotifire.KotiRequest
 import com.digitalcloud.kotifire.SourceType
 import com.google.gson.Gson
 import com.orhanobut.hawk.Hawk
+import org.json.JSONArray
 
 import java.util.ArrayList
 import kotlin.reflect.KClass
@@ -23,6 +23,8 @@ import kotlin.reflect.KClass
 internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) :
     CacheProvider<T>(type) {
 
+    private val gson = Gson()
+
     private operator fun get(key: String): T {
         return Hawk.get(key)
     }
@@ -31,49 +33,17 @@ internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) 
         return Hawk.contains(key)
     }
 
-    fun put(url: String, t: String): Boolean {
-        return Hawk.put(url, t)
+    fun getString(url: String): String {
+        return Hawk.get(url)
     }
 
-    override fun put(url: String, t: T): Boolean {
-        return Hawk.put(url, t)
-    }
-
-    override fun put(url: String, t: ArrayList<T>): Boolean {
-        return Hawk.put(url, t)
+    override fun put(url: String, response: String) {
+        Hawk.put(url, response)
     }
 
     override fun get(url: String, dataHandler: DataHandler<T>) {
         if (!contains(url)) return
-
-        val data = get(url)
-        try {
-            if (data is ArrayList<*>) {
-                val objects = data as ArrayList<T>
-                dataHandler.onSuccess(objects, SourceType.CACHE)
-            } else {
-                if (type.isInstance(data)) {
-                    dataHandler.onSuccess(data, SourceType.CACHE)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-    }
-
-    override fun isLikeCache(key: String, t: T): Boolean {
-        if (!contains(key)) return false
-        val tCache = get(key)
-        val gson = Gson()
-        return gson.toJson(t).hashCode() == gson.toJson(tCache).hashCode()
-    }
-
-    override fun isLikeCache(key: String, objects: ArrayList<T>): Boolean {
-        if (!contains(key)) return false
-        val tCache = get(key)
-        val gson = Gson()
-        return gson.toJson(objects).hashCode() == gson.toJson(tCache).hashCode()
+        dataHandler.onSuccess(getString(url), SourceType.CACHE)
     }
 
     override fun isNotTheSameCache(key: String, data: String): Boolean {
@@ -89,20 +59,32 @@ internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) 
 
         if (!contains(url)) return
 
-        val data = get(url)
-        Log.e("Error", "Cache Data : $data")
+        val response: String = getString(url)
 
-        try {
-            if (data is ArrayList<*>) {
-                val objects = data as ArrayList<T>
-                mKotiRequest.mDataHandler!!.onSuccess(objects, SourceType.CACHE)
-            } else {
-                if (type.isInstance(data)) {
-                    mKotiRequest.mDataHandler!!.onSuccess(data, SourceType.CACHE)
+        Log.e("Error", "Cache Data : $response")
+
+        mKotiRequest.mDataHandler!!.onSuccess(response, SourceType.CACHE)
+
+        when (type) {
+            String::class,
+            Any::class -> {
+                mKotiRequest.mDataHandler!!.onSuccess(response, SourceType.CACHE)
+            }
+            else -> {
+                try {
+                    val tArrayList = ArrayList<T>()
+                    val jsonArray = JSONArray(response)
+                    for (i in 0 until jsonArray.length()) {
+                        val jsonString = jsonArray.get(i).toString()
+                        val mData = gson.fromJson(jsonString, type.java)
+                        tArrayList.add(mData)
+                    }
+                    mKotiRequest.mDataHandler!!.onSuccess(tArrayList, SourceType.NETWORK)
+                } catch (e: Exception) {
+                    val res = gson.fromJson(response, type.java)
+                    mKotiRequest.mDataHandler!!.onSuccess(res, SourceType.NETWORK)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 }

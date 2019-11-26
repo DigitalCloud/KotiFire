@@ -155,12 +155,16 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
 
         val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
 
+        dataHandler.onSuccess(response, SourceType.NETWORK)
+
+        if (isNeedCheckCache)
+            mHawkCacheProvider.put(url, response)
+
         when (type) {
             String::class,
             Any::class -> {
                 if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
                     dataHandler.onSuccess(response, SourceType.NETWORK)
-                    mHawkCacheProvider.put(url, response)
                 }
             }
             else -> {
@@ -173,16 +177,14 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                         tArrayList.add(mData)
                     }
 
-                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, tArrayList)) {
+                    if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
                         dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
-                        mHawkCacheProvider.put(url, tArrayList)
 
                     }
                 } catch (e: Exception) {
                     val res = gson.fromJson(response, type.java)
-                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, res)) {
+                    if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
                         dataHandler.onSuccess(res, SourceType.NETWORK)
-                        mHawkCacheProvider.put(url, res)
                     }
                 }
             }
@@ -200,7 +202,13 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                     Log.e(TAG, "response : $response")
 
                     postEventBus(StatusCodeEvent(error.networkResponse.statusCode))
-                    dataHandler.onFail(extractErrorMessages(response), false)
+
+                    try {
+                        val res = gson.fromJson(response, type.java)
+                        dataHandler.onSuccess(res, SourceType.NETWORK)
+                    } catch (e: java.lang.Exception) {
+                        dataHandler.onFail(extractErrorMessages(response), false)
+                    }
                 } else {
                     Log.e(TAG, "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(error))
                     dataHandler.onFail(VolleyErrorUtil.getMessage(error), true)
