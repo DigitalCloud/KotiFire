@@ -25,10 +25,6 @@ internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) 
 
     private val gson = Gson()
 
-    private operator fun get(key: String): T {
-        return Hawk.get(key)
-    }
-
     private operator fun contains(key: String): Boolean {
         return Hawk.contains(key)
     }
@@ -48,7 +44,7 @@ internal class HawkCacheProvider<T : Any> internal constructor(type: KClass<T>) 
 
     override fun isNotTheSameCache(key: String, data: String): Boolean {
         if (!contains(key)) return true
-        val tCache = get(key)
+        val tCache = getString(key)
         return data.hashCode() != tCache.hashCode()
     }
 

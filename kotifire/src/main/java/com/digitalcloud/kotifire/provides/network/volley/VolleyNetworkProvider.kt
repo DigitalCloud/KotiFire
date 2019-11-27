@@ -152,14 +152,9 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
     }
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
-
-        val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
-
         dataHandler.onSuccess(response, SourceType.NETWORK)
 
-        if (isNeedCheckCache)
-            mHawkCacheProvider.put(url, response)
-
+        val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
         when (type) {
             String::class,
             Any::class -> {
@@ -179,7 +174,6 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
 
                     if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
                         dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
-
                     }
                 } catch (e: Exception) {
                     val res = gson.fromJson(response, type.java)
@@ -189,6 +183,9 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                 }
             }
         }
+
+        if (isNeedCheckCache)
+            mHawkCacheProvider.put(url, response)
     }
 
     private fun extractResponseError(error: VolleyError?, dataHandler: DataHandlerInterface<T>?) {
