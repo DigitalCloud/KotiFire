@@ -226,28 +226,35 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
         try {
             val jsonObject = JSONObject(errorResponse)
 
-            val message = jsonObject.optString("message")
-            if (!message.isNullOrEmpty()) {
-                messages["message"] = message
-            }
-
-            val errors = jsonObject.optString("errors")
-            if (!errors.isNullOrEmpty()) {
-                val errorsJson = JSONObject(errors)
-                val keys = errorsJson.names()
-                if (keys != null) {
-                    for (i in 0 until keys.length()) {
-                        val name = keys.getString(i)
-                        var msg: String? = null
-                        val messagesList = errorsJson.optJSONArray(name)
-                        if (messagesList != null && messagesList.length() > 0) {
-                            msg = messagesList.optString(0)
+            try {
+                val errors = jsonObject.optString("errors")
+                if (!errors.isNullOrEmpty()) {
+                    val errorsJson = JSONObject(errors)
+                    val keys = errorsJson.names()
+                    if (keys != null) {
+                        for (i in 0 until keys.length()) {
+                            val name = keys.getString(i)
+                            var msg: String? = null
+                            val messagesList = errorsJson.optJSONArray(name)
+                            if (messagesList != null && messagesList.length() > 0) {
+                                msg = messagesList.optString(0)
+                            }
+                            messages[name] = msg
                         }
-                        messages[name] = msg
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
+            if (messages.isEmpty) {
+                val message = jsonObject.optString("message")
+                if (!message.isNullOrEmpty()) {
+                    messages["message"] = message
+                } else {
+                    messages["message"] = VolleySingleton.defaultError
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
