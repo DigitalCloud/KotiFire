@@ -31,6 +31,19 @@ open class DataHandler<T> : DataHandlerInterface<T> {
                 else -> ""
             }
         }
+
+        fun getNetworkErrorResponse(o: Any): String {
+            return when (o) {
+                is androidx.collection.ArrayMap<*, *> -> {
+                    val map = o as androidx.collection.ArrayMap<*, *>?
+                    if (map == null || map.isEmpty)
+                        ""
+                    else
+                        map["response"] as String
+                }
+                else -> ""
+            }
+        }
     }
 
     override fun onSuccess(response: String, source: SourceType) {

@@ -30,7 +30,13 @@ open class RequestModel {
 
                     val value = field.get(this) ?: continue
                     if (value is ArrayList<*>) {
-                        params.put(field.name, JSONArray(value))
+                        val mJSONArray = JSONArray()
+                        value.forEach { item ->
+                            if (item is RequestModel) {
+                                mJSONArray.put(item.generatePostParams())
+                            }
+                        }
+                        params.put(field.name, mJSONArray)
                     } else {
                         if (value is String)
                             if (value.isEmpty()) continue
