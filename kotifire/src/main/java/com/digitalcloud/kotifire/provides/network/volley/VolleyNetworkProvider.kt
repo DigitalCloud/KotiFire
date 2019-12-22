@@ -28,74 +28,34 @@ import kotlin.reflect.KClass
 class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
     NetworkProvider<T>(type) {
 
-    private val TAG = "VolleyNetworkProvider"
-    private val gson = Gson()
-
     private var mHawkCacheProvider = HawkCacheProvider(type)
 
     private var url = ""
     private var mKotiCachePolicy = KotiCachePolicy.NETWORK_ONLY
 
     override fun makeRequest(mKotiRequest: KotiRequest<T>) {
-        url = mKotiRequest.baseURl + mKotiRequest.endpoint
-
-        val params: JSONObject = if (mKotiRequest.method.type == Request.Method.GET) {
-            url += mKotiRequest.params.generateGetParams()
-            JSONObject()
-        } else {
-            mKotiRequest.params.generatePostParams()
-        }
-
-        if (mKotiRequest.method.type == Request.Method.PATCH) {
-            params.put("_method", "patch")
-            mKotiRequest.method = KotiMethod.POST
-        }
-
         mKotiCachePolicy = mKotiRequest.cachingType
 
-        KotiFire.setNewHeaders(mKotiRequest.headers)
+        url = mKotiRequest.baseURl + mKotiRequest.endpoint
+
+        Log.e("Error", "Request URL : $url")
 
         if (mKotiRequest.files.isEmpty) {
-            makeStringRequest(
-                mKotiRequest.method.type,
-                url,
-                params,
-                mKotiRequest.mDataHandler!!
-            )
+            makeStringRequest(mKotiRequest)
         } else {
-            val multiParts: ArrayMap<String, DataPart> = ArrayMap()
-            mKotiRequest.files.map {
-                multiParts.put(it.key, DataPart(it.value.absolutePath, ""))
-            }
-
-            makeMultiPartRequest(
-                mKotiRequest.method.type,
-                url,
-                params,
-                multiParts,
-                mKotiRequest.mDataHandler!!
-            )
+            makeMultiPartRequest(mKotiRequest)
         }
     }
 
-    private fun makeStringRequest(
-        method: Int,
-        url: String,
-        params: JSONObject,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var newUrl = url
-
-        if (!url.startsWith("http")) {
-            newUrl = KotiFire.baseUrl + url
-        }
-
-        Log.e(TAG, "makeStringRequest url : $newUrl")
-
-        val stringRequest = object : StringRequest(method, newUrl, Response.Listener { response ->
-            Log.e(TAG, response)
-            handleResponse(response, dataHandler)
-        }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+    private fun makeStringRequest(mKotiRequest: KotiRequest<T>) {
+        val stringRequest = object : StringRequest(mKotiRequest.method.type, url,
+            Response.Listener { response ->
+                Log.e("Error", response)
+                handleResponse(response, mKotiRequest.mDataHandler!!)
+            },
+            Response.ErrorListener { error ->
+                extractResponseError(error, mKotiRequest.mDataHandler!!)
+            }) {
 
             override fun getBodyContentType(): String {
                 return "application/json; charset=utf-8"
@@ -103,45 +63,43 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
 
             override fun getBody(): ByteArray {
                 return try {
-                    params.toString().toByteArray(Charsets.UTF_8)
+                    getParamsAsJsonObject(mKotiRequest).toString().toByteArray(Charsets.UTF_8)
                 } catch (e: Exception) {
                     super.getBody()
                 }
             }
 
             override fun getHeaders(): Map<String, String> {
-                return KotiFire.headers
+                return mKotiRequest.headers
             }
         }
 
         VolleySingleton.addToRequestQueue(stringRequest)
     }
 
-    private fun makeMultiPartRequest(
-        method: Int,
-        url: String,
-        params: JSONObject,
-        multiParts: ArrayMap<String, DataPart>,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var newUrl = url
+    private fun makeMultiPartRequest(mKotiRequest: KotiRequest<T>) {
 
-        if (!url.startsWith("http")) {
-            newUrl = KotiFire.baseUrl + url
+        val multiParts: ArrayMap<String, DataPart> = ArrayMap()
+        mKotiRequest.files.map {
+            multiParts.put(it.key, DataPart(it.value.absolutePath, ""))
         }
 
-        Log.e(TAG, "makeMultiPartRequest url : $newUrl")
-
         val volleyMultipartRequest =
-            object :
-                VolleyMultipartRequest(method, url, Response.Listener { response ->
+            object : VolleyMultipartRequest(mKotiRequest.method.type, url,
+                Response.Listener { response ->
                     val data = String(response.data)
-                    Log.e(TAG, data)
-                    handleResponse(data, dataHandler)
-                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+                    Log.e("Error", data)
+                    handleResponse(data, mKotiRequest.mDataHandler!!)
+                },
+                Response.ErrorListener { error ->
+                    extractResponseError(
+                        error,
+                        mKotiRequest.mDataHandler!!
+                    )
+                }) {
 
                 override val jsonObject: JSONObject?
-                    get() = params
+                    get() = getParamsAsJsonObject(mKotiRequest)
 
                 override val byteData: Map<String, DataPart>?
                     get() = multiParts
@@ -152,7 +110,9 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
     }
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
+
         val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
+        val gson = Gson()
 
         if (type != String::class && type != Any::class) {
             try {
@@ -189,19 +149,19 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                 if (error?.networkResponse != null) {
                     val response = String(error.networkResponse.data)
 
-                    Log.e(TAG, "statusCode : " + error.networkResponse.statusCode)
-                    Log.e(TAG, "response : $response")
+                    Log.e("Error", "statusCode : " + error.networkResponse.statusCode)
+                    Log.e("Error", "response : $response")
 
                     postEventBus(StatusCodeEvent(error.networkResponse.statusCode))
                     dataHandler.onFail(extractErrorMessages(response), false)
                 } else {
-                    Log.e(TAG, "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(error))
+                    Log.e("Error", "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(error))
                     dataHandler.onFail(VolleyErrorUtil.getMessage(error), true)
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            dataHandler!!.onFail(e.localizedMessage, false)
+            dataHandler!!.onFail(e.localizedMessage!!, false)
         }
     }
 
@@ -249,5 +209,21 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
             e.printStackTrace()
         }
         return messages
+    }
+
+    private fun getParamsAsJsonObject(mKotiRequest: KotiRequest<T>): JSONObject {
+        val params: JSONObject = if (mKotiRequest.method.type == Request.Method.GET) {
+            url += mKotiRequest.params.generateGetParams()
+            JSONObject()
+        } else {
+            mKotiRequest.params.generatePostParams()
+        }
+
+        if (mKotiRequest.method.type == Request.Method.PATCH) {
+            params.put("_method", "patch")
+            mKotiRequest.method = KotiMethod.POST
+        }
+
+        return params
     }
 }
