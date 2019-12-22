@@ -25,8 +25,12 @@ open class DataHandler<T> : DataHandlerInterface<T> {
                     val map = o as androidx.collection.ArrayMap<*, *>?
                     if (map == null || map.isEmpty)
                         ""
-                    else
-                        map[map.keyAt(0)] as String
+                    else {
+                        if (map.keyAt(0) == "response")
+                            map[map.keyAt(1)] as String
+                        else
+                            map[map.keyAt(0)] as String
+                    }
                 }
                 else -> ""
             }
