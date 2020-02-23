@@ -8,8 +8,9 @@ package com.digitalcloud.kotifire.provides.network.volley
 import com.android.volley.*
 import com.android.volley.toolbox.HttpHeaderParser
 import com.digitalcloud.kotifire.KotiFire
-
+import org.json.JSONObject
 import java.io.*
+import kotlin.math.min
 
 /**
  * Created by Abdullah Hussein on 7/4/2018.
@@ -29,11 +30,14 @@ open class VolleyMultipartRequest(
     private var mListener: Response.Listener<NetworkResponse> = listener
     private var mErrorListener: Response.ErrorListener = errorListener
 
+    protected open val jsonObject: JSONObject?
+        get() = null
+
     protected open val byteData: Map<String, DataPart>?
         get() = null
 
     override fun getHeaders(): Map<String, String> {
-        return KotiFire.instance.getHeaders()
+        return KotiFire.headers
     }
 
     override fun getBodyContentType(): String {
@@ -47,9 +51,10 @@ open class VolleyMultipartRequest(
 
         try {
             // populate text payload
-            val params = params
-            if (params != null && params.isNotEmpty()) {
-                textParse(dos, params, paramsEncoding)
+            if (jsonObject != null) {
+                jsonObject!!.keys().forEach { item ->
+                    buildTextPart(dos, item, jsonObject!!.get(item).toString())
+                }
             }
 
             // populate data byte payload
@@ -60,7 +65,6 @@ open class VolleyMultipartRequest(
 
             // close multipart form data after text and file data
             dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd)
-
             return bos.toByteArray()
         } catch (e: IOException) {
             e.printStackTrace()
@@ -87,7 +91,11 @@ open class VolleyMultipartRequest(
     }
 
     @Throws(IOException::class)
-    private fun textParse(dataOutputStream: DataOutputStream, params: Map<String, String>, encoding: String) {
+    private fun textParse(
+        dataOutputStream: DataOutputStream,
+        params: Map<String, String>,
+        encoding: String
+    ) {
         try {
             for ((key, value) in params) {
                 buildTextPart(dataOutputStream, key, value)
@@ -106,7 +114,11 @@ open class VolleyMultipartRequest(
     }
 
     @Throws(IOException::class)
-    private fun buildTextPart(dataOutputStream: DataOutputStream, parameterName: String, parameterValue: String) {
+    private fun buildTextPart(
+        dataOutputStream: DataOutputStream,
+        parameterName: String,
+        parameterValue: String
+    ) {
         dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd)
         dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"$parameterName\"$lineEnd")
         dataOutputStream.writeBytes(lineEnd)
@@ -115,13 +127,17 @@ open class VolleyMultipartRequest(
     }
 
     @Throws(IOException::class)
-    private fun buildDataPart(dataOutputStream: DataOutputStream, dataFile: DataPart, inputName: String) {
+    private fun buildDataPart(
+        dataOutputStream: DataOutputStream,
+        dataFile: DataPart,
+        inputName: String
+    ) {
         dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd)
         dataOutputStream.writeBytes(
             "Content-Disposition: form-data; name=\"" +
                     inputName + "\"; filename=\"" + dataFile.fileName + "\"" + lineEnd
         )
-        if (dataFile.type != null && !dataFile.type!!.trim { it <= ' ' }.isEmpty()) {
+        if (dataFile.type != null && dataFile.type!!.trim { it <= ' ' }.isNotEmpty()) {
             dataOutputStream.writeBytes("Content-Type: " + dataFile.type + lineEnd)
         }
         dataOutputStream.writeBytes(lineEnd)
@@ -130,7 +146,7 @@ open class VolleyMultipartRequest(
         var bytesAvailable = fileInputStream.available()
 
         val maxBufferSize = 1024 * 1024
-        var bufferSize = Math.min(bytesAvailable, maxBufferSize)
+        var bufferSize = min(bytesAvailable, maxBufferSize)
         val buffer = ByteArray(bufferSize)
 
         var bytesRead = fileInputStream.read(buffer, 0, bufferSize)
@@ -138,7 +154,7 @@ open class VolleyMultipartRequest(
         while (bytesRead > 0) {
             dataOutputStream.write(buffer, 0, bufferSize)
             bytesAvailable = fileInputStream.available()
-            bufferSize = Math.min(bytesAvailable, maxBufferSize)
+            bufferSize = min(bytesAvailable, maxBufferSize)
             bytesRead = fileInputStream.read(buffer, 0, bufferSize)
         }
 

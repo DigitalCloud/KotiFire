@@ -3,11 +3,17 @@
  * a.hussein@dce.sa
  */
 
-package com.digitalcloud.kotifireexample
+package com.digitalcloud.kotifireexample.ui
 
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.digitalcloud.kotifire.*
+import com.digitalcloud.kotifire.provides.network.volley.StatusCodeEvent
+import com.digitalcloud.kotifireexample.R
+import com.digitalcloud.kotifireexample.network.Post
+import com.digitalcloud.kotifireexample.network.api.PostsAPIs
+import com.digitalcloud.kotifireexample.network.api.UsersAPIs
 import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -18,8 +24,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        makeGetRequest()
+        makePostRequest()
     }
 
     public override fun onStart() {
@@ -33,11 +38,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun makeGetRequest() {
-        val request = KotiRequest(String::class)
-        request.endpoint = "/users"
-        request.method = KotiMethod.GET
-        request.cachingType = KotiCachePolicy.CACHE_THEN_NETWORK
-        request.mDataHandler = object : DataHandler<String>() {
+
+        val mDataHandler = object : DataHandler<String>() {
             override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
             }
 
@@ -50,15 +52,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        KotiFireProvider(this, request).execute()
+        KotiFireProvider(UsersAPIs.Users().getKotiRequest(String::class, mDataHandler)).execute()
     }
 
     private fun makePostRequest() {
 
-        val request = KotiRequest(String::class)
-        request.endpoint = "/users"
-        request.method = KotiMethod.GET
-        request.mDataHandler = object : DataHandler<String>() {
+        val mDataHandler = object : DataHandler<String>() {
             override fun onSuccess(objects: ArrayList<String>, source: SourceType) {
             }
 
@@ -71,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        KotiFireProvider(this, request).execute()
+        KotiFireProvider(PostsAPIs.CreatePost(Post()).getKotiRequest(String::class, mDataHandler)).execute()
     }
 
     private fun handleResponseAsObject(t: String) {
@@ -85,5 +84,5 @@ class MainActivity : AppCompatActivity() {
     @Subscribe()
     fun onMessageEvent(event: StatusCodeEvent) {
         Log.e("Error", "Status Code : " + event.statusCode)
-    };
+    }
 }

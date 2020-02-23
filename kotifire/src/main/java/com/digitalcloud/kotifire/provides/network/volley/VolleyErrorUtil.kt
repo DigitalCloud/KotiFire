@@ -5,9 +5,7 @@
 
 package com.digitalcloud.kotifire.provides.network.volley
 
-import android.content.Context
 import com.android.volley.*
-import com.digitalcloud.kotifire.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -28,30 +26,27 @@ object VolleyErrorUtil {
      * @param error the error
      * @return the message
      */
-    fun getMessage(context: Context, error: VolleyError?): String? {
+    fun getMessage(error: VolleyError?): String {
         try {
             if (error != null) {
                 if (error is TimeoutError) {
-                    return context.resources.getString(R.string.app_name)
+                    return VolleySingleton.defaultError
                 } else if (isServerProblem(error)) {
-                    return handleServerError(
-                        context,
-                        error
-                    )
+                    return handleServerError(error)
                 } else if (isNetworkProblem(error)) {
-                    return context.resources.getString(R.string.app_name)
+                    return VolleySingleton.internetError
                 }
-                return context.resources.getString(R.string.app_name)
+                return VolleySingleton.defaultError
             } else {
-                return context.resources.getString(R.string.app_name)
+                return VolleySingleton.defaultError
             }
         } catch (e: Exception) {
-            return context.resources.getString(R.string.app_name)
+            return VolleySingleton.defaultError
         }
 
     }
 
-    private fun handleServerError(context: Context, error: VolleyError): String? {
+    private fun handleServerError(error: VolleyError): String {
         val response = error.networkResponse
         try {
             val result = gson.fromJson<HashMap<String, String>>(
@@ -59,12 +54,14 @@ object VolleyErrorUtil {
                 object : TypeToken<Map<String, String>>() {}.type
             )
             return if (result != null && result.containsKey("error")) {
-                result["error"]
+                result["error"] ?: VolleySingleton.defaultError
+            } else if (result != null && result.containsKey("message")) {
+                result["message"] ?: VolleySingleton.defaultError
             } else {
-                context.resources.getString(R.string.app_name)
+                return VolleySingleton.defaultError
             }
         } catch (e: Exception) {
-            return context.resources.getString(R.string.app_name)
+            return VolleySingleton.defaultError
         }
     }
 

@@ -5,21 +5,15 @@
 
 package com.digitalcloud.kotifire.provides.network.volley
 
-import android.content.Context
-import androidx.collection.ArrayMap
 import android.util.Log
+import androidx.collection.ArrayMap
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.digitalcloud.kotifire.*
 import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
-import com.digitalcloud.kotifire.KotiFire
-import com.digitalcloud.kotifire.DataHandlerInterface
-import com.digitalcloud.kotifire.KotiRequest
-import com.digitalcloud.kotifire.models.RequestModel
 import com.digitalcloud.kotifire.provides.network.NetworkProvider
-import com.digitalcloud.kotifire.SourceType
 import com.google.gson.Gson
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONArray
@@ -31,190 +25,143 @@ import kotlin.reflect.KClass
  * Created by Abdullah Hussein on 7/3/2018.
  * for more details : a.hussein@dce.sa
  */
-class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type: KClass<T>) :
-    NetworkProvider<T>(context, type) {
+class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
+    NetworkProvider<T>(type) {
 
-    private val TAG = "VolleyNetworkProvider"
-    private val gson = Gson()
-
-    private var mHawkCacheProvider = HawkCacheProvider(context, type)
+    private var mHawkCacheProvider = HawkCacheProvider(type)
 
     private var url = ""
     private var mKotiCachePolicy = KotiCachePolicy.NETWORK_ONLY
 
     override fun makeRequest(mKotiRequest: KotiRequest<T>) {
-        url = mKotiRequest.baseURl + mKotiRequest.endpoint
-
-        val params: ArrayMap<String, String> = if (mKotiRequest.method.type == Request.Method.GET) {
-            url += mKotiRequest.params.generateGetParams()
-            ArrayMap()
-        } else {
-            mKotiRequest.params.generatePostParams()
-        }
-
-        if (mKotiRequest.method.type == Request.Method.PATCH) {
-            params["_method"] = "patch"
-            mKotiRequest.method = KotiMethod.POST
-        }
-
         mKotiCachePolicy = mKotiRequest.cachingType
 
-        if (mKotiRequest.files.isEmpty) {
-            makeStringRequest(
-                mKotiRequest.method.type,
-                url,
-                params,
-                mKotiRequest.mDataHandler!!
-            )
-        } else {
-            val multiParts: ArrayMap<String, DataPart> = ArrayMap()
-            mKotiRequest.files.map {
-                multiParts.put(it.key, DataPart(it.value.absolutePath, ""))
-            }
+        url = mKotiRequest.baseURl + mKotiRequest.endpoint
 
-            makeMultiPartRequest(
-                mKotiRequest.method.type,
-                url,
-                params,
-                multiParts,
-                mKotiRequest.mDataHandler!!
-            )
+        Log.e("Error", "Request URL : $url")
+
+        if (mKotiRequest.files.isEmpty) {
+            makeStringRequest(mKotiRequest)
+        } else {
+            makeMultiPartRequest(mKotiRequest)
         }
     }
 
-    private fun makeStringRequest(
-        method: Int,
-        url: String,
-        params: ArrayMap<String, String>,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var newUrl = url
+    private fun makeStringRequest(mKotiRequest: KotiRequest<T>) {
+        val stringRequest = object : StringRequest(mKotiRequest.method.type, url,
+            Response.Listener { response ->
+                Log.e("Error", response)
+                handleResponse(response, mKotiRequest.mDataHandler!!)
+            },
+            Response.ErrorListener { error ->
+                extractResponseError(error, mKotiRequest.mDataHandler!!)
+            }) {
 
-        if (!url.startsWith("http")) {
-            newUrl = KotiFire.instance.getBaseUrl() + url
-        }
+            override fun getBodyContentType(): String {
+                return "application/json; charset=utf-8"
+            }
 
-        Log.e(TAG, "makeStringRequest url : $newUrl")
-
-        val stringRequest = object : StringRequest(method, newUrl, Response.Listener { response ->
-            Log.e(TAG, response)
-            handleResponse(response, dataHandler)
-        }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
-
-            override fun getParams(): Map<String, String> {
-                return params
+            override fun getBody(): ByteArray {
+                return try {
+                    getParamsAsJsonObject(mKotiRequest).toString().toByteArray(Charsets.UTF_8)
+                } catch (e: Exception) {
+                    super.getBody()
+                }
             }
 
             override fun getHeaders(): Map<String, String> {
-                return KotiFire.instance.getHeaders()
+                return mKotiRequest.headers
             }
         }
 
-        VolleySingleton.getInstance(context).addToRequestQueue(stringRequest)
+        VolleySingleton.addToRequestQueue(stringRequest)
     }
 
-    private fun makeMultiPartRequest(
-        method: Int,
-        url: String,
-        params: ArrayMap<String, String>,
-        multiParts: ArrayMap<String, DataPart>,
-        dataHandler: DataHandlerInterface<T>
-    ) {
-        var newUrl = url
+    private fun makeMultiPartRequest(mKotiRequest: KotiRequest<T>) {
 
-        if (!url.startsWith("http")) {
-            newUrl = KotiFire.instance.getBaseUrl() + url
+        val multiParts: ArrayMap<String, DataPart> = ArrayMap()
+        mKotiRequest.files.map {
+            multiParts.put(it.key, DataPart(it.value.absolutePath, ""))
         }
 
-        Log.e(TAG, "makeMultiPartRequest url : $newUrl")
-
         val volleyMultipartRequest =
-            object :
-                VolleyMultipartRequest(method, url, Response.Listener { response ->
+            object : VolleyMultipartRequest(mKotiRequest.method.type, url,
+                Response.Listener { response ->
                     val data = String(response.data)
-                    Log.e(TAG, data)
-                    handleResponse(data, dataHandler)
-                }, Response.ErrorListener { error -> extractResponseError(error, dataHandler) }) {
+                    Log.e("Error", data)
+                    handleResponse(data, mKotiRequest.mDataHandler!!)
+                },
+                Response.ErrorListener { error ->
+                    extractResponseError(
+                        error,
+                        mKotiRequest.mDataHandler!!
+                    )
+                }) {
+
+                override val jsonObject: JSONObject?
+                    get() = getParamsAsJsonObject(mKotiRequest)
 
                 override val byteData: Map<String, DataPart>?
                     get() = multiParts
 
-                override fun getParams(): Map<String, String> {
-                    return params
-                }
             }
 
-        VolleySingleton.getInstance(context).addToRequestQueue(volleyMultipartRequest)
+        VolleySingleton.addToRequestQueue(volleyMultipartRequest)
     }
 
     private fun handleResponse(response: String, dataHandler: DataHandlerInterface<T>) {
 
         val isNeedCheckCache = mKotiCachePolicy == KotiCachePolicy.CACHE_THEN_NETWORK
+        val gson = Gson()
 
-        when (type) {
-            String::class,
-            Any::class -> {
+        if (type != String::class && type != Any::class) {
+            try {
+                val tArrayList = ArrayList<T>()
+                val jsonArray = JSONArray(response)
+                for (i in 0 until jsonArray.length()) {
+                    val jsonString = jsonArray.get(i).toString()
+                    val mData = gson.fromJson(jsonString, type.java)
+                    tArrayList.add(mData)
+                }
+
                 if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
-                    dataHandler.onSuccess(response, SourceType.NETWORK)
-                    mHawkCacheProvider.put(url, response)
+                    dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
+                }
+            } catch (e: Exception) {
+                val res = gson.fromJson(response, type.java)
+                if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
+                    dataHandler.onSuccess(res, SourceType.NETWORK)
                 }
             }
-            else -> {
-                try {
-                    val tArrayList = ArrayList<T>()
-                    val jsonArray = JSONArray(response)
-                    for (i in 0 until jsonArray.length()) {
-                        val jsonString = jsonArray.get(i).toString()
-                        val mData = gson.fromJson(jsonString, type.java)
-                        tArrayList.add(mData)
-                    }
-
-                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, tArrayList)) {
-                        dataHandler.onSuccess(tArrayList, SourceType.NETWORK)
-                        mHawkCacheProvider.put(url, tArrayList)
-
-                    }
-                } catch (e: Exception) {
-                    val res = gson.fromJson(response, type.java)
-                    if (!isNeedCheckCache || !mHawkCacheProvider.isLikeCache(url, res)) {
-                        dataHandler.onSuccess(res, SourceType.NETWORK)
-                        mHawkCacheProvider.put(url, res)
-                    }
-                }
+        } else {
+            if (!isNeedCheckCache || mHawkCacheProvider.isNotTheSameCache(url, response)) {
+                dataHandler.onSuccess(response, SourceType.NETWORK)
             }
         }
+
+        if (isNeedCheckCache)
+            mHawkCacheProvider.put(url, response)
     }
 
     private fun extractResponseError(error: VolleyError?, dataHandler: DataHandlerInterface<T>?) {
         try {
             if (dataHandler != null) {
                 if (error?.networkResponse != null) {
-
                     val response = String(error.networkResponse.data)
 
-                    Log.e(TAG, "statusCode : " + error.networkResponse.statusCode)
-                    Log.e(TAG, "response : $response")
+                    Log.e("Error", "statusCode : " + error.networkResponse.statusCode)
+                    Log.e("Error", "response : $response")
 
                     postEventBus(StatusCodeEvent(error.networkResponse.statusCode))
                     dataHandler.onFail(extractErrorMessages(response), false)
                 } else {
-                    Log.e(
-                        TAG, "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(
-                            context,
-                            error
-                        )!!
-                    )
-                    dataHandler.onFail(
-                        VolleyErrorUtil.getMessage(
-                            context,
-                            error
-                        )!!, true
-                    )
+                    Log.e("Error", "VolleyErrorUtil : " + VolleyErrorUtil.getMessage(error))
+                    dataHandler.onFail(VolleyErrorUtil.getMessage(error), true)
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            dataHandler!!.onFail(e.localizedMessage, false)
+            dataHandler!!.onFail(e.localizedMessage!!, false)
         }
     }
 
@@ -226,35 +173,57 @@ class VolleyNetworkProvider<T : Any> internal constructor(context: Context, type
         val messages = ArrayMap<String, String>()
         try {
             val jsonObject = JSONObject(errorResponse)
-            val message = jsonObject.optString("message")
-            val errors = jsonObject.optString("errors")
 
-            if (!errors.isNullOrEmpty()) {
-                val errorsJson = JSONObject(errors)
-                val keys = errorsJson.names()
-                if (keys != null) {
-                    for (i in 0 until keys.length()) {
-                        val name = keys.getString(i)
-                        var msg: String? = null
-                        val messagesList = errorsJson.optJSONArray(name)
-                        if (messagesList != null && messagesList.length() > 0) {
-                            msg = messagesList.optString(0)
+            try {
+                val errors = jsonObject.optString("errors")
+                if (!errors.isNullOrEmpty()) {
+                    val errorsJson = JSONObject(errors)
+                    val keys = errorsJson.names()
+                    if (keys != null) {
+                        for (i in 0 until keys.length()) {
+                            val name = keys.getString(i)
+                            var msg: String? = null
+                            val messagesList = errorsJson.optJSONArray(name)
+                            if (messagesList != null && messagesList.length() > 0) {
+                                msg = messagesList.optString(0)
+                            }
+                            messages[name] = msg
                         }
-                        messages[name] = msg
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             if (messages.isEmpty) {
+                val message = jsonObject.optString("message")
                 if (!message.isNullOrEmpty()) {
                     messages["message"] = message
+                } else {
+                    messages["message"] = VolleySingleton.defaultError
                 }
             }
 
+            messages["response"] = errorResponse
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
         return messages
+    }
+
+    private fun getParamsAsJsonObject(mKotiRequest: KotiRequest<T>): JSONObject {
+        val params: JSONObject = if (mKotiRequest.method.type == Request.Method.GET) {
+            url += mKotiRequest.params.generateGetParams()
+            JSONObject()
+        } else {
+            mKotiRequest.params.generatePostParams()
+        }
+
+        if (mKotiRequest.method.type == Request.Method.PATCH) {
+            params.put("_method", "patch")
+            mKotiRequest.method = KotiMethod.POST
+        }
+
+        return params
     }
 }
