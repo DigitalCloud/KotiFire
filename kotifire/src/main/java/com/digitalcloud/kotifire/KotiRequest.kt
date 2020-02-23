@@ -6,9 +6,9 @@ import java.io.File
 import kotlin.reflect.KClass
 
 class KotiRequest<T : Any>(var responseType: KClass<T>) {
-    var baseURl: String = KotiFire.instance.getBaseUrl()
+    var baseURl: String = KotiFire.baseUrl
     var endpoint: String = ""
-    var headers: ArrayMap<String, String> = KotiFire.instance.getHeaders()
+    var headers: ArrayMap<String, String> = KotiFire.headers
     var method: KotiMethod = KotiMethod.GET
     var params: RequestModel = RequestModel()
     var files: ArrayMap<String, File> = ArrayMap()

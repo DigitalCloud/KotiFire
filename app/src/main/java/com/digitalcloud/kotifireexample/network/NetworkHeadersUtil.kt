@@ -3,10 +3,11 @@
  * a.hussein@dce.sa
  */
 
-package com.digitalcloud.kotifireexample
+package com.digitalcloud.kotifireexample.network
 
 import androidx.collection.ArrayMap
 import android.util.Log
+import com.digitalcloud.kotifireexample.BuildConfig
 
 /**
  * Created by Abdullah Hussein on 12/07/2017.
@@ -31,9 +32,12 @@ object NetworkHeadersUtil {
     val headers: ArrayMap<String, String>
         get() {
             val headers = ArrayMap<String, String>()
-            headers[ACCEPT_HEADER] = CONTENT_TYPE_JSON
-            headers[API_VERSION_HEADER] = API_VERSION
-            headers[APP_VERSION_HEADER] = BuildConfig.VERSION_NAME
+            headers[ACCEPT_HEADER] =
+                CONTENT_TYPE_JSON
+            headers[API_VERSION_HEADER] =
+                API_VERSION
+            headers[APP_VERSION_HEADER] =
+                BuildConfig.VERSION_NAME
             headers[LANGUAGE_HEADER] = "YOUR ACCEPT LANGUAGE"   //ADD ACCEPT LANGUAGE
             headers[AUTHORIZATION_HEADER] = "YOUR ACCESS TOKEN" //ADD ACCESS TOKEN
             Log.e(TAG, "headers : $headers")

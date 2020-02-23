@@ -23,7 +23,27 @@ open class DataHandler<T> : DataHandlerInterface<T> {
                 is String -> o.toString()
                 is androidx.collection.ArrayMap<*, *> -> {
                     val map = o as androidx.collection.ArrayMap<*, *>?
-                    map!![map.keyAt(0)] as String
+                    if (map == null || map.isEmpty)
+                        ""
+                    else {
+                        if (map.keyAt(0) == "response")
+                            map[map.keyAt(1)] as String
+                        else
+                            map[map.keyAt(0)] as String
+                    }
+                }
+                else -> ""
+            }
+        }
+
+        fun getNetworkErrorResponse(o: Any): String {
+            return when (o) {
+                is androidx.collection.ArrayMap<*, *> -> {
+                    val map = o as androidx.collection.ArrayMap<*, *>?
+                    if (map == null || map.isEmpty)
+                        ""
+                    else
+                        map["response"] as String
                 }
                 else -> ""
             }
