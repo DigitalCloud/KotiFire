@@ -5,8 +5,6 @@
 
 package com.digitalcloud.kotifire
 
-import android.content.Context
-import android.util.Log
 import com.digitalcloud.kotifire.provides.cache.HawkCacheProvider
 import com.digitalcloud.kotifire.provides.network.volley.VolleyNetworkProvider
 

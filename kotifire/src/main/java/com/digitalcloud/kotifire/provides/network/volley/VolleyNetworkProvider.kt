@@ -104,6 +104,9 @@ class VolleyNetworkProvider<T : Any> internal constructor(type: KClass<T>) :
                 override val byteData: Map<String, DataPart>?
                     get() = multiParts
 
+                override fun getHeaders(): Map<String, String> {
+                    return mKotiRequest.headers
+                }
             }
 
         VolleySingleton.addToRequestQueue(volleyMultipartRequest)

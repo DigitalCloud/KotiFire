@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         textView.text = DataHandler.getNetworkErrorMessage(o)
     }
 
-    @Subscribe()
+    @Subscribe
     fun onMessageEvent(event: StatusCodeEvent) {
         Log.e("Error", "Status Code : " + event.statusCode)
     }

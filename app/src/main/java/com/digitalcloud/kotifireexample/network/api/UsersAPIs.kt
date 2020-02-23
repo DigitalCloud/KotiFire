@@ -11,7 +11,7 @@ import java.io.File
 
 sealed class UsersAPIs : KotiRoute {
 
-    class Users() : UsersAPIs()
+    class Users : UsersAPIs()
 
     override val basePath = BuildConfig.BASE_URL
 

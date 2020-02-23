@@ -5,7 +5,6 @@
 
 package com.digitalcloud.kotifire.models
 
-import androidx.collection.ArrayMap
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject

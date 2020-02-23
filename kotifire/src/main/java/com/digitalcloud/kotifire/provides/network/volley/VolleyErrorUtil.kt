@@ -29,14 +29,18 @@ object VolleyErrorUtil {
     fun getMessage(error: VolleyError?): String {
         try {
             if (error != null) {
-                if (error is TimeoutError) {
-                    return VolleySingleton.defaultError
-                } else if (isServerProblem(error)) {
-                    return handleServerError(error)
-                } else if (isNetworkProblem(error)) {
-                    return VolleySingleton.internetError
+                return when {
+                    error is TimeoutError -> {
+                        VolleySingleton.defaultError
+                    }
+                    isServerProblem(error) -> {
+                        handleServerError(error)
+                    }
+                    isNetworkProblem(error) -> {
+                        VolleySingleton.internetError
+                    }
+                    else -> VolleySingleton.defaultError
                 }
-                return VolleySingleton.defaultError
             } else {
                 return VolleySingleton.defaultError
             }

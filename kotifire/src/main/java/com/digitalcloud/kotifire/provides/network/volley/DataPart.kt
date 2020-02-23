@@ -9,6 +9,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 
 import java.io.*
+import kotlin.math.ceil
+import kotlin.math.ln
+import kotlin.math.max
+import kotlin.math.pow
 
 /**
  * Created by Abdullah Hussein on 10/23/2018.
@@ -45,18 +49,17 @@ class DataPart(path: String, var type: String?) {
             BitmapFactory.decodeStream(fis, null, o)
             fis.close()
 
-            val IMAGE_MAX_SIZE = 1024
+            val imageMaxSize = 1024
             var scale = 1
-            if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
-                scale = Math.pow(
-                    2.0,
-                    Math.ceil(
-                        Math.log(
-                            IMAGE_MAX_SIZE / Math.max(
+            if (o.outHeight > imageMaxSize || o.outWidth > imageMaxSize) {
+                scale = 2.0.pow(
+                    ceil(
+                        ln(
+                            imageMaxSize / max(
                                 o.outHeight,
                                 o.outWidth
                             ).toDouble()
-                        ) / Math.log(0.5)
+                        ) / ln(0.5)
                     ).toInt().toDouble()
                 ).toInt()
             }

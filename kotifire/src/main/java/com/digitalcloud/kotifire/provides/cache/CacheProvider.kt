@@ -5,10 +5,7 @@
 
 package com.digitalcloud.kotifire.provides.cache
 
-import android.content.Context
 import com.digitalcloud.kotifire.DataHandler
-
-import java.util.ArrayList
 import kotlin.reflect.KClass
 
 /**

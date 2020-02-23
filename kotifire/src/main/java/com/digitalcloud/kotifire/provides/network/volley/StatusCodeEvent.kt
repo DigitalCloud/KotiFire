@@ -1,4 +1,3 @@
 package com.digitalcloud.kotifire.provides.network.volley
 
-class StatusCodeEvent(val statusCode: Int) {
-}
+class StatusCodeEvent(val statusCode: Int)
